@@ -5,20 +5,19 @@
 ## Ce projet fournit un pipeline reproductible basé sur **Snakemake**. Il exécute automatiquement plusieurs scripts R présents dans `scripts/`, accepte des paramètres personnalisables via `config.yaml`, puis compare leurs résultats
 
 ## Structure du projet
-
-crispr/snake/
-├── config.yaml # Configuration des scripts à exécuter
-├── envs/ # Environnement Conda requis pour R
-│ └── r.yml
-├── scripts/ # Scripts R (et Python) à exécuter
-│ ├── script1.R
-│ ├── script2.R
-│ ├── script3.R
-│ └── compare_results.py
-├── results/ # Résultats générés automatiquement
-├── snakefile # Fichier Snakefile principal
-└── README.md # Ce fichier
-
+```arduino
+Snake/
+├── Snakefile
+├── config.yaml
+├── envs/
+│   └── r.yml
+├── scripts/
+│   ├── tom_script_complet.R
+│   ├── script_B.R
+│   ├── script_C.R
+│   └── compare_results.py
+└── results/
+```
 
 ## Prérequis
 
