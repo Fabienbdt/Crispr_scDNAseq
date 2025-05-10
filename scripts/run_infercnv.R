@@ -1,18 +1,19 @@
 # === LIBRAIRIES ========================================================
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
 
-BiocManager::install("S4Arrays")
 
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-BiocManager::install("infercnv")
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+#  install.packages("BiocManager")
 
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
+#BiocManager::install("S4Arrays")
 
-BiocManager::install("rhdf5")
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+ # install.packages("BiocManager")
+#BiocManager::install("infercnv")
 
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+ # install.packages("BiocManager")
+
+#BiocManager::install("rhdf5")
 
 #!/usr/bin/env Rscript
 suppressPackageStartupMessages({
@@ -25,16 +26,16 @@ suppressPackageStartupMessages({
 ## ─── Définition des options ────────────────────────────────────────────
 option_list <- list(
   make_option("--NormalCellFile",      type="character", default = "RUN1_S1_hFF_WT.dna.h5"),
-  make_option("--TumorCellFill",      type="character", , default = "RUN2_S8_hFF_clone_6_KOfluo.dna.h5" ),
+  make_option("--TumorCellFill",      type="character", default = "RUN2_S8_hFF_clone_6_KOfluo.dna.h5" ),
   make_option("--chrom",          type="character", default="10"),
   make_option("--max_cells",      type="integer",   default=5000),
   make_option("--min_reads",      type="integer",   default=100),
   make_option("--max_reads",      type="integer",   default=50000),
-  make_option("--target_norm",    type="integer",   default=5000),
+  make_option("--target_norm",    type="integer",   default=10000),
   make_option("--target_tum",     type="integer",   default=5000),
   make_option("--seed",           type="integer",   default=42),
   make_option("--threads",        type="integer",   default=4),
-  make_option("--cutoff",        type="integer",   default=0),
+  make_option("--cutoff",        type="integer",   default=1),
   make_option("--workdir",        type="character", default=getwd()),
   make_option("--HMM",        type="character", default="i3"),
   make_option("--out_dir",        type="character", default="infercnv_out")
@@ -243,6 +244,48 @@ genes_gain <- go10$gene[
 ]
 
 go_gain <- go10[go10$gene %in% genes_gain, ]
+## ─── Extraire et sauvegarder les régions dupliquées ────────────────────
+dup_regions <- gains_chr10[ , c("chr", "start", "end",
+                                "state", "cell_group_name", "cnv_name") ]
+
+dup_path <- file.path(opt$out_dir, "duplication_regions_chr10.tsv")
+write.table(dup_regions, dup_path,
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
+cat("\n>>> Régions dupliquées détectées (chr", opt$chrom, "):\n", sep = "")
+print(head(dup_regions, 10))
+
+library(ggplot2)
+
+# Si tu veux un y numérique, transforme d'abord cell_group_name en facteur et en nombre :
+dup_regions$group_idx <- as.integer(factor(dup_regions$cell_group_name))
+
+ggplot(dup_regions) +
+  geom_segment(aes(
+    x = start/1e6, xend = end/1e6,
+    y = group_idx, yend = group_idx
+  ),
+  linewidth = 1.5
+  ) +
+  scale_y_continuous(
+    breaks = dup_regions$group_idx,
+    labels = dup_regions$cell_group_name
+  ) +
+  labs(
+    title = paste0("Duplications détectées sur chr", opt$chrom),
+    x = "Position (Mb)",
+    y = "Groupe de cellules (cell_group_name)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 8)
+  )
+
+# Sauvegarde  
+ggsave(
+  file.path(opt$out_dir, "duplications_chr10.pdf"),
+  width = 8, height = 4
+)
 
 """
 # 1. Sélection des cellules dupliquées
