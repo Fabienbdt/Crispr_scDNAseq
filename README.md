@@ -12,9 +12,9 @@ Snake/
 ├── envs/
 │   └── r.yml
 ├── scripts/
-│   ├── tom_script_complet.R
-│   ├── script_B.R
-│   ├── script_C.R
+│   ├── run_infercnv.R
+│   ├── karyotapR.R
+│   ├── mosaic.py
 │   └── compare_results.py
 └── results/
 ```
