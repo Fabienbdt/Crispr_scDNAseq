@@ -1,0 +1,39 @@
+# config.yaml
+repo_url: "git@gitlab.emi.u-bordeaux.fr:crispr/snake.git"
+
+# chemins ou wrappers à lancer
+scripts:
+  infercnv:  "scripts/run_infercnv.R"
+  mosaic:    "scripts/run_mosaic.py"       # wrapper future version
+  karyotapr: "scripts/run_karyotapR.R"
+  compare:   "scripts/compare_results.py"
+
+# arguments propres à chaque outil
+params:
+
+  infercnv:
+    run1_file:   "RUN1_S1_hFF_WT.dna.h5"
+    run2_file:   "RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
+    chrom:       "10"
+    max_cells:   5000
+    min_reads:   100
+    max_reads:   50000
+    target_norm: 5000
+    target_tum:  5000
+    seed:        42
+    threads:     8
+    workdir:     "/Volumes/LaCie"
+    out_dir:     "infercnv_chr10_out_filtered"
+
+  mosaic:
+    bam:        "sample.bam"          # -> adapte quand ton wrapper sera prêt
+    reference:  "hg38"
+    threads:    8
+
+  karyotapr:
+    vcf:        "sample.vcf.gz"
+    assembly:   "hg38"
+    min_depth:  10
+
+  compare:
+    # pas d'options pour l’instant
