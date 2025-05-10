@@ -24,8 +24,8 @@ suppressPackageStartupMessages({
 
 ## ─── Définition des options ────────────────────────────────────────────
 option_list <- list(
-  make_option("--run1_file",      type="character"),
-  make_option("--run2_file",      type="character"),
+  make_option("--NormalCellFile",      type="character", default = "RUN1_S1_hFF_WT.dna.h5"),
+  make_option("--TumorCellFill",      type="character", , default = "RUN2_S8_hFF_clone_6_KOfluo.dna.h5" ),
   make_option("--chrom",          type="character", default="10"),
   make_option("--max_cells",      type="integer",   default=5000),
   make_option("--min_reads",      type="integer",   default=100),
@@ -83,8 +83,8 @@ read_counts_h5 <- function(path, chrom = opt$chrom, max_cells = opt$max_cells) {
 
 
 # === LECTURE & FILTRAGE ===================================================
-run1_file <- "RUN1_S1_hFF_WT.dna.h5"   # normal
-run2_file <- "RUN2_S8_hFF_clone_6_KOfluo.dna.h5"        # tumor
+run1_file <- opt$NormalCellFile   # normal
+run2_file <- opt$TumorCellFill    # tumor
 out_dir   <- "infercnv_chr10_out_filtered"
 
 run1 <- read_counts_h5(run1_file, chrom = opt$chrom)
@@ -244,7 +244,8 @@ genes_gain <- go10$gene[
 
 go_gain <- go10[go10$gene %in% genes_gain, ]
 
-"""# 1. Sélection des cellules dupliquées
+"""
+# 1. Sélection des cellules dupliquées
 cells_dupli <- rownames(meta_tumor)[meta_tumor$top_dupli_1 == 1]
 
 # 2. Restreindre la matrice aux gènes de go_gain et cellules dupliquées
@@ -254,10 +255,10 @@ counts_gain_genes <- counts[rownames(counts) %in% go_gain$gene, colnames(counts)
 total_duplication <- rowSums(counts_gain_genes)
 
 # 4. Ajout dans le tableau go_gain
-go_gain$total_duplication <- total_duplication"""
+go_gain$total_duplication <- total_duplication
+"""
 
 file.create("results/infercnv/.done")
-
 
 
 
