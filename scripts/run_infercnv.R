@@ -256,6 +256,8 @@ total_duplication <- rowSums(counts_gain_genes)
 # 4. Ajout dans le tableau go_gain
 go_gain$total_duplication <- total_duplication"""
 
+file.create("results/infercnv/.done")
+
 
 
 
