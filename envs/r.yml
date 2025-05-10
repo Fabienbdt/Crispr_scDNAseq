@@ -1,1 +1,18 @@
-#ALL THE PACKAGES NECCESSARY FOR THE EXECUTION OF CODES
+name: r_bio_env
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-base=4.3
+  - r-optparse
+  - r-infercnv
+  - r-seurat
+  - r-dplyr
+  - r-ggplot2
+  - r-rhdf5
+  - r-matrix
+  - r-genomicranges
+  - python=3.10
+  - pip
+  - pip:
+      - mosaicatcher # ← si l’outil Python est disponible sur pip
