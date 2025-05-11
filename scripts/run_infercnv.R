@@ -37,7 +37,7 @@ option_list <- list(
   make_option("--threads",        type="integer",   default=4),
   make_option("--cutoff",        type="integer",   default=1),
   make_option("--workdir",        type="character", default=getwd()),
-  make_option("--HMM",        type="character", default="i3"),
+  make_option("--HMM",        type="character", default="i6"),
   make_option("--out_dir",        type="character", default="infercnv_out")
 )
 opt <- parse_args(OptionParser(option_list = option_list))
@@ -228,9 +228,11 @@ print(total_gain_percent)
 ##  Pré-requis library(data.table)
 library(GenomicRanges)
 library(dplyr)
+library(data.table)
+
 
 ### 1. charger les sous-groupes tumoraux ------------------------------
-meta <- fread(file.path(opt$out_dir, "map_metadata_from_infercnv.txt"))
+meta <- read.table(file.path(opt$out_dir, "map_metadata_from_infercnv.txt"))
 tumor_groups <- meta$subcluster[grepl("^tumor_", meta$subcluster)]
 
 ### 2. lire les régions CNV ------------------------------------------
@@ -242,11 +244,11 @@ cnv <- fread(regions_file)
 cnv[, subcluster := sub("^.+\\.", "", cell_group_name)]   # garde “tumor_s16”
 
 ### 3. garder les gains sur chr10 dans les groupes tumoraux ----------
-gains_chr10 <- cnv[state == 3 & chr == 10 &
+gains_chr10 <- cnv[state >= 4 & chr == 10 &
                      subcluster %in% tumor_groups]
 
 ### 4. définir la fenêtre 35–125 Mb et calculer la fraction ----------
-roi      <- GRanges("10", IRanges(35e6, 125e6))
+roi      <- GRanges("10", IRanges(35e6, 127e6))
 roi_len  <- width(roi)          # 90 000 001 bp
 
 gain_gr  <- GRanges(seqnames = gains_chr10$chr,
@@ -300,10 +302,15 @@ hmm_roi <- hmm[chr == 10 & start >= 35e6 & end <= 125e6]
 hmm_roi[, cell_type := ifelse(grepl("^tumor\\.", cell_id), "tumor", "normal")]
 
 
+
 ### B.  Convertir l’état en « copies au-dessus du diploïde »
 #  (i3: état 1=1 copie, 2=2 copies, 3=≥3 copies => gain = state-2)
-hmm_roi[, copies_extra := pmax(state - 2, 0)]
-
+hmm_roi[, copies_extra := case_when(
+  state == 4 ~ 1,
+  state == 5 ~ 2,
+  state == 6 ~ 3,
+  TRUE       ~ 0
+)]
 ### C. Moyenne par cellule puis par groupe
 mean_by_cell <- hmm_roi[, .(mean_extra = mean(copies_extra)),
                         by = .(cell_id, cell_type)]
@@ -347,11 +354,11 @@ DimPlot(
 
 go10 <- read.table("gene_order.txt", header = FALSE, sep = "\t")
 colnames(go10) <- c("gene", "chr", "start", "end")
-regions_file <- file.path(opt$out_dir,"HMM_CNV_predictions.HMMi3.leiden.hmm_mode-subclusters.Pnorm_0.5.pred_cnv_regions.dat")
+regions_file <- Sys.glob(file.path(opt$out_dir, "HMM_CNV_predictions.*.pred_cnv_regions.dat"))[1]
 hmm10 <- read.table(regions_file, header = TRUE, sep = "\t")
 
-# 4) Matrice logique : gain si state > 2  
-gains_chr10 <- subset(hmm10, state == 3)
+# 4) Matrice logique : gain si state > 4 
+gains_chr10 <- subset(hmm10, state >= 4)
 
 genes_gain <- go10$gene[
   sapply(1:nrow(gains_chr10), function(i) {
@@ -362,43 +369,6 @@ genes_gain <- go10$gene[
   })
 ]
 
-go_gain <- go10[go10$gene %in% genes_gain, ]
-## ─── Extraire et sauvegarder les régions dupliquées ────────────────────
-dup_regions <- gains_chr10[ , c("chr", "start", "end",
-                                "state", "cell_group_name", "cnv_name") ]
-
-dup_path <- file.path(opt$out_dir, "duplication_regions_chr10.tsv")
-write.table(dup_regions, dup_path,
-            sep = "\t", quote = FALSE, row.names = FALSE)
-
-cat("\n>>> Régions dupliquées détectées (chr", opt$chrom, "):\n", sep = "")
-print(head(dup_regions, 10))
-
-library(ggplot2)
-
-# Si tu veux un y numérique, transforme d'abord cell_group_name en facteur et en nombre :
-dup_regions$group_idx <- as.integer(factor(dup_regions$cell_group_name))
-
-ggplot(dup_regions) +
-  geom_segment(aes(
-    x = start/1e6, xend = end/1e6,
-    y = group_idx, yend = group_idx
-  ),
-  linewidth = 1.5
-  ) +
-  scale_y_continuous(
-    breaks = dup_regions$group_idx,
-    labels = dup_regions$cell_group_name
-  ) +
-  labs(
-    title = paste0("Duplications détectées sur chr", opt$chrom),
-    x = "Position (Mb)",
-    y = "Groupe de cellules (cell_group_name)"
-  ) +
-  theme_minimal() +
-  theme(
-    axis.text.y = element_text(size = 8)
-  )
 
 # Sauvegarde  
 ggsave(
@@ -407,12 +377,6 @@ ggsave(
 )
 
 file.create("results/infercnv/.done")
-
-
-
-
-
-
 
 
 
