@@ -7,11 +7,11 @@
 #BiocManager::install("S4Arrays")
 
 #if (!requireNamespace("BiocManager", quietly = TRUE))
- # install.packages("BiocManager")
+# install.packages("BiocManager")
 #BiocManager::install("infercnv")
 
 #if (!requireNamespace("BiocManager", quietly = TRUE))
- # install.packages("BiocManager")
+# install.packages("BiocManager")
 
 #BiocManager::install("rhdf5")
 
@@ -224,8 +224,127 @@ total_gain_percent <- mean(meta_tumor$proportion_dupli_10, na.rm = TRUE) * 100
 # Affichage
 print(total_gain_percent)
 
+###############################################################################
+##  Pré-requis library(data.table)
+library(GenomicRanges)
+library(dplyr)
+
+### 1. charger les sous-groupes tumoraux ------------------------------
+meta <- fread(file.path(opt$out_dir, "map_metadata_from_infercnv.txt"))
+tumor_groups <- meta$subcluster[grepl("^tumor_", meta$subcluster)]
+
+### 2. lire les régions CNV ------------------------------------------
+regions_file <- Sys.glob(file.path(
+  opt$out_dir, "HMM_CNV_predictions.*.pred_cnv_regions.dat"))[1]
+cnv <- fread(regions_file)
+
+## ➜ créer un label sans le préfixe “tumor.” / “normal.”
+cnv[, subcluster := sub("^.+\\.", "", cell_group_name)]   # garde “tumor_s16”
+
+### 3. garder les gains sur chr10 dans les groupes tumoraux ----------
+gains_chr10 <- cnv[state == 3 & chr == 10 &
+                     subcluster %in% tumor_groups]
+
+### 4. définir la fenêtre 35–125 Mb et calculer la fraction ----------
+roi      <- GRanges("10", IRanges(35e6, 125e6))
+roi_len  <- width(roi)          # 90 000 001 bp
+
+gain_gr  <- GRanges(seqnames = gains_chr10$chr,
+                    ranges   = IRanges(gains_chr10$start, gains_chr10$end),
+                    grp      = gains_chr10$subcluster)
+
+ov        <- findOverlaps(gain_gr, roi)
+ov_len    <- pmin(end(gain_gr)[queryHits(ov)],  end(roi)) -
+  pmax(start(gain_gr)[queryHits(ov)], start(roi)) + 1
+
+prop_by_grp <- data.frame(
+  subcluster = mcols(gain_gr)$grp[queryHits(ov)],
+  overlap_bp = ov_len
+) %>% 
+  group_by(subcluster) %>% 
+  summarise(prop_gain_roi = sum(overlap_bp) / roi_len)   # fraction 0-1
+
+print(prop_by_grp)
+
+### 5. moyenne simple ou pondérée -----------------------------
+mean_gain_pct <- mean(prop_by_grp$prop_gain_roi) * 100
+cat(sprintf("\nGain moyen (35–125 Mb) = %.1f %%\n", mean_gain_pct))
+
+# moyenne pondérée par le nombre de cellules, si dispo
+if ("n_cells" %in% names(meta)) {
+  prop_by_grp <- left_join(prop_by_grp,
+                           meta[, c("subcluster", "n_cells")],
+                           by = "subcluster")
+  w_gain_pct <- weighted.mean(prop_by_grp$prop_gain_roi,
+                              w = prop_by_grp$n_cells) * 100
+  cat(sprintf("Gain moyen pondéré (par n_cells) = %.1f %%\n", w_gain_pct))
+}
+
+library(data.table)
+library(GenomicRanges)
+library(dplyr)
+
+### A. Charger les états HMM par cellule×bin (fichier *genes.dat*)
+genes_file <- Sys.glob(file.path(
+  opt$out_dir, "HMM_CNV_predictions.*pred_cnv_genes.dat"))[1]
+hmm <- fread(genes_file)
+
+# ── Harmoniser les labels
+cell_col  <- grep("^cell", names(hmm), value = TRUE)[1]
+setnames(hmm, cell_col, "cell_id")
+
+# ── Garder chr10 et fenêtre 35-125 Mb
+hmm_roi <- hmm[chr == 10 & start >= 35e6 & end <= 125e6]
+
+# ── Ajouter type de cellule (normal / tumor)
+hmm_roi[, cell_type := ifelse(grepl("^tumor\\.", cell_id), "tumor", "normal")]
+
+
+### B.  Convertir l’état en « copies au-dessus du diploïde »
+#  (i3: état 1=1 copie, 2=2 copies, 3=≥3 copies => gain = state-2)
+hmm_roi[, copies_extra := pmax(state - 2, 0)]
+
+### C. Moyenne par cellule puis par groupe
+mean_by_cell <- hmm_roi[, .(mean_extra = mean(copies_extra)),
+                        by = .(cell_id, cell_type)]
+
+mean_tum  <- mean(mean_by_cell[cell_type == "tumor"]$mean_extra)
+mean_norm <- mean(mean_by_cell[cell_type == "normal"]$mean_extra)
+
+gain_vs_norm <- mean_tum - mean_norm    # normalement ≈ mean_tum (norm ~0)
+
+cat(sprintf(
+  "\nGain moyen sur 35–125 Mb : %.2f copies supplémentaires\n", gain_vs_norm))
+cat(sprintf(
+  "→ Cela signifie qu'en moyenne, les cellules tumorales présentent %.1f %% d'ADN en plus dans cette région par rapport aux cellules normales (2 copies attendues).\n",
+  100 * gain_vs_norm / 2))
+
+
 
 # === DETECTION DES POSITIONS ============================================
+# Normalisation & Identification des features variables
+seu <- NormalizeData(seu)
+seu <- FindVariableFeatures(seu)
+seu <- ScaleData(seu)
+seu <- RunPCA(seu, npcs = 30)
+seu <- RunUMAP(seu, dims = 1:20)
+
+dup_treshold <- 0.2                         # ajustez si besoin
+dupTumor <- WhichCells(
+  seu,
+  expression = cell_type == "tumor" &
+    proportion_dupli_10 >= dup_treshold
+)
+length(dupTumor)      # combien de cellules retenues
+
+DimPlot(
+  seu,
+  reduction = "umap",           # ou "pca", "tsne"
+  cells.highlight = dupTumor,
+  cols.highlight = "red",
+  cols = "lightgrey"
+) + ggtitle("Tumor cells with chr10 duplication ≥ 0.2")
+
 go10 <- read.table("gene_order.txt", header = FALSE, sep = "\t")
 colnames(go10) <- c("gene", "chr", "start", "end")
 regions_file <- file.path(opt$out_dir,"HMM_CNV_predictions.HMMi3.leiden.hmm_mode-subclusters.Pnorm_0.5.pred_cnv_regions.dat")
@@ -286,20 +405,6 @@ ggsave(
   file.path(opt$out_dir, "duplications_chr10.pdf"),
   width = 8, height = 4
 )
-
-"""
-# 1. Sélection des cellules dupliquées
-cells_dupli <- rownames(meta_tumor)[meta_tumor$top_dupli_1 == 1]
-
-# 2. Restreindre la matrice aux gènes de go_gain et cellules dupliquées
-counts_gain_genes <- counts[rownames(counts) %in% go_gain$gene, colnames(counts) %in% cells_dupli]
-
-# 3. Calcul du total de duplication (somme des comptages) pour chaque gène dans toutes les cellules tumorales dupliquées
-total_duplication <- rowSums(counts_gain_genes)
-
-# 4. Ajout dans le tableau go_gain
-go_gain$total_duplication <- total_duplication
-"""
 
 file.create("results/infercnv/.done")
 
