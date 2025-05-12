@@ -321,8 +321,6 @@ summary_df <- data.frame(
 
 # Sauvegardes
 write.csv(summary_df, file = "résumé_gains_chr10_pourcent.csv", row.names = FALSE)
-write.table(summary_df, file = "résumé_gains_chr10_pourcent.md",
-            quote = FALSE, row.names = FALSE, sep = " | ", col.names = FALSE)
 
 file.create(file.path(opt$out_dir, ".done"))
 
