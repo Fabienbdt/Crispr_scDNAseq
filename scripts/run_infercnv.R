@@ -35,7 +35,7 @@ option_list <- list(
   make_option("--target_tum",     type="integer",   default=5000),
   make_option("--seed",           type="integer",   default=42),
   make_option("--threads",        type="integer",   default=4),
-  make_option("--cutoff",        type="integer",   default=1),
+  make_option("--cutoff",        type="integer",   default=0.1),
   make_option("--workdir",        type="character", default=getwd()),
   make_option("--HMM",        type="character", default="i6"),
   make_option("--out_dir",        type="character", default="infercnv_out")
@@ -194,7 +194,8 @@ inf_obj <- infercnv::run(
   HMM = TRUE,
   out_dir = opt$out_dir,
   HMM_type = opt$HMM,
-  num_threads = opt$threads
+  num_threads = opt$threads,
+  leiden_resolution = 0.001
 )
 
 # Ajout des résultats InferCNV à un objet Seurat
@@ -224,63 +225,6 @@ total_gain_percent <- mean(meta_tumor$proportion_dupli_10, na.rm = TRUE) * 100
 # Affichage
 print(total_gain_percent)
 
-###############################################################################
-##  Pré-requis library(data.table)
-library(GenomicRanges)
-library(dplyr)
-library(data.table)
-
-
-### 1. charger les sous-groupes tumoraux ------------------------------
-meta <- read.table(file.path(opt$out_dir, "map_metadata_from_infercnv.txt"))
-tumor_groups <- meta$subcluster[grepl("^tumor_", meta$subcluster)]
-
-### 2. lire les régions CNV ------------------------------------------
-regions_file <- Sys.glob(file.path(
-  opt$out_dir, "HMM_CNV_predictions.*.pred_cnv_regions.dat"))[1]
-cnv <- fread(regions_file)
-
-## ➜ créer un label sans le préfixe “tumor.” / “normal.”
-cnv[, subcluster := sub("^.+\\.", "", cell_group_name)]   # garde “tumor_s16”
-
-### 3. garder les gains sur chr10 dans les groupes tumoraux ----------
-gains_chr10 <- cnv[state >= 4 & chr == 10 &
-                     subcluster %in% tumor_groups]
-
-### 4. définir la fenêtre 35–125 Mb et calculer la fraction ----------
-roi      <- GRanges("10", IRanges(35e6, 127e6))
-roi_len  <- width(roi)          # 90 000 001 bp
-
-gain_gr  <- GRanges(seqnames = gains_chr10$chr,
-                    ranges   = IRanges(gains_chr10$start, gains_chr10$end),
-                    grp      = gains_chr10$subcluster)
-
-ov        <- findOverlaps(gain_gr, roi)
-ov_len    <- pmin(end(gain_gr)[queryHits(ov)],  end(roi)) -
-  pmax(start(gain_gr)[queryHits(ov)], start(roi)) + 1
-
-prop_by_grp <- data.frame(
-  subcluster = mcols(gain_gr)$grp[queryHits(ov)],
-  overlap_bp = ov_len
-) %>% 
-  group_by(subcluster) %>% 
-  summarise(prop_gain_roi = sum(overlap_bp) / roi_len)   # fraction 0-1
-
-print(prop_by_grp)
-
-### 5. moyenne simple ou pondérée -----------------------------
-mean_gain_pct <- mean(prop_by_grp$prop_gain_roi) * 100
-cat(sprintf("\nGain moyen (35–125 Mb) = %.1f %%\n", mean_gain_pct))
-
-# moyenne pondérée par le nombre de cellules, si dispo
-if ("n_cells" %in% names(meta)) {
-  prop_by_grp <- left_join(prop_by_grp,
-                           meta[, c("subcluster", "n_cells")],
-                           by = "subcluster")
-  w_gain_pct <- weighted.mean(prop_by_grp$prop_gain_roi,
-                              w = prop_by_grp$n_cells) * 100
-  cat(sprintf("Gain moyen pondéré (par n_cells) = %.1f %%\n", w_gain_pct))
-}
 
 library(data.table)
 library(GenomicRanges)
@@ -295,10 +239,8 @@ hmm <- fread(genes_file)
 cell_col  <- grep("^cell", names(hmm), value = TRUE)[1]
 setnames(hmm, cell_col, "cell_id")
 
-# ── Garder chr10 et fenêtre 35-125 Mb
-hmm_roi <- hmm[chr == 10 & start >= 35e6 & end <= 125e6]
-
 # ── Ajouter type de cellule (normal / tumor)
+hmm_roi <- hmm[chr == 10 & start >= 35e6 & end <= 125e6]
 hmm_roi[, cell_type := ifelse(grepl("^tumor\\.", cell_id), "tumor", "normal")]
 
 
@@ -325,7 +267,178 @@ cat(sprintf(
 cat(sprintf(
   "→ Cela signifie qu'en moyenne, les cellules tumorales présentent %.1f %% d'ADN en plus dans cette région par rapport aux cellules normales (2 copies attendues).\n",
   100 * gain_vs_norm / 2))
+###############################################################################
+##  PARAMÈTRES
+###############################################################################
+chrom      <- 10               # chromosome d’intérêt (hg19)
+start_int  <- 35               # borne Mb inférieure de la zone d’intérêt
+end_int    <- 127              # borne Mb supérieure de la zone d’intérêt
+subclust   <- "tumor_s7"       # sous-cluster à analyser
 
+###############################################################################
+## 1 • AJOUT DE LA COLONNE copies_extra DANS hmm ------------------------------
+###############################################################################
+hmm[, copies_extra := dplyr::case_when(
+  state == 4 ~ 1,     # “duplication” (state-4 dans i6)
+  state == 5 ~ 2,
+  state == 6 ~ 3,
+  TRUE       ~ 0
+)]
+
+###############################################################################
+## 2 • CELLULES DU SOUS-CLUSTER tumor_s7 --------------------------------------
+###############################################################################
+meta <- read.table(
+  file.path(opt$out_dir, "map_metadata_from_infercnv.txt"),
+  header = TRUE, sep = "\t", stringsAsFactors = FALSE
+)
+
+# barcodes de tumor_s7 (préfixe T_)
+cells_s7 <- rownames(meta)[meta$subcluster == subclust]
+
+# total de cellules tumorales (préfixe T_)
+cells_tumor <- rownames(meta)[startsWith(rownames(meta), "T_")]
+
+###############################################################################
+## 3 • FILTRAGE DE hmm POUR LES LIGNES CONCERNANT CE SOUS-CLUSTER -------------
+##     (Les prédictions HMM sont déjà agrégées par sous-cluster : une fois par
+##      bin génomique – on utilise donc l’étiquette "tumor.<subcluster>").
+###############################################################################
+# Exemple si tu connais le cluster d’intérêt
+subclust <- "tumor_s7"
+hmm_s7 <- hmm[cell_id == paste0("tumor.", subclust)]
+# lignes pour tumor_s7
+hmm_norm <- hmm_roi[startsWith(cell_id, "normal.")]
+
+###############################################################################
+## 4 • FONCTION DE RÉSUMÉ : gain moyen (vs normales) + effectifs --------------
+###############################################################################
+résumer_gain_vs_norm <- function(dt_tumor, dt_norm, label,
+                                 start_mb = NULL, end_mb = NULL,
+                                 barcodes_cluster, barcodes_tumor) {
+  if (!is.null(start_mb) && !is.null(end_mb)) {
+    dt_tumor <- dt_tumor[start >= start_mb*1e6 & end <= end_mb*1e6]
+    dt_norm  <- dt_norm [start >= start_mb*1e6 & end <= end_mb*1e6]
+  }
+  
+  # moyenne par bin (déjà agrégée par sous-cluster) puis moyenne globale
+  mean_tumor <- dt_tumor[, mean(copies_extra, na.rm = TRUE)]
+  mean_norm  <- dt_norm [, mean(copies_extra, na.rm = TRUE)]
+  gain_vs_norm <- mean_tumor - mean_norm
+  
+  # taille et pourcentage du sous-cluster (en nombre de cellules, issu de meta)
+  n_cluster <- length(barcodes_cluster)
+  pct       <- 100 * n_cluster / length(barcodes_tumor)
+  
+  cat(sprintf("\n[%s] %d cellules tumorales (%.1f %% du total tumor)\n",
+              label, n_cluster, pct))
+  cat(sprintf("[%s] Gain moyen%s : %.2f copies supplémentaires (vs normales)\n",
+              label,
+              ifelse(!is.null(start_mb),
+                     sprintf(" sur %d–%d Mb", start_mb, end_mb),
+                     " sur l'ensemble du chr10"),
+              gain_vs_norm))
+  cat(sprintf("→ Cela correspond à %.1f %% d'ADN en plus (vs 2 copies attendues)\n",
+              100 * gain_vs_norm / 2))
+}
+
+###############################################################################
+## 5 • RÉSULTATS
+###############################################################################
+cat("\n==== SOUS-CLUSTER", subclust, "====\n")
+# Zone d’intérêt 35–127 Mb
+résumer_gain_vs_norm(hmm_s7, hmm_norm, subclust,
+                     start_mb = start_int, end_mb = end_int,
+                     barcodes_cluster = cells_s7,
+                     barcodes_tumor   = cells_tumor)
+
+# Chromosome entier
+résumer_gain_vs_norm(hmm_s7, hmm_norm, subclust,
+                     barcodes_cluster = cells_s7,
+                     barcodes_tumor   = cells_tumor)
+compter_cellules_avec_gain_region <- function(hmm, meta, start_mb, end_mb) {
+  # Conversion borne en bases
+  start_bp <- start_mb * 1e6
+  end_bp   <- end_mb * 1e6
+
+  # Sous-ensemble des bins dans la région
+  hmm_region <- hmm[start >= start_bp & end <= end_bp]
+
+  # Binariser la présence d’un gain dans chaque bin
+  hmm_region[, gain_bin := copies_extra > 0]
+
+  # Regrouper par cellule et vérifier si AU MOINS UN bin a un gain
+  cells_with_gain <- hmm_region[, .(gain_present = any(gain_bin, na.rm = TRUE)), by = cell_id]
+  cells_with_gain <- cells_with_gain[gain_present == TRUE]
+
+  # Récupérer les barcodes tumoraux uniquement
+  tumor_barcodes <- rownames(meta)[startsWith(rownames(meta), "T_")]
+  cells_with_gain_tumor <- cells_with_gain[cell_id %in% paste0("tumor.", meta[tumor_barcodes, "subcluster"])]
+
+  # Résumé
+  n_gain  <- nrow(cells_with_gain_tumor)
+  n_total <- length(tumor_barcodes)
+  pct     <- 100 * n_gain / n_total
+
+  cat(sprintf("\n→ %d cellules tumorales (%0.1f %% du total) présentent un gain dans la région %d–%d Mb\n",
+              n_gain, pct, start_mb, end_mb))
+}
+#############
+compter_cellules_avec_gain_region <- function(hmm, meta,
+                                              start_mb, end_mb,
+                                              chrom = 10) {
+  # 1 • Région en pb ----------------------------------------------------------
+  start_bp <- start_mb * 1e6
+  end_bp   <- end_mb   * 1e6
+  
+  # 2 • Sous-ensemble des bins tumoraux avec gain dans la fenêtre -------------
+  gain_bins <- hmm[
+    chr == chrom &
+      start >= start_bp & end <= end_bp &                # fenêtre
+      grepl("^tumor\\.", cell_id) &                      # clusters tumoraux
+      copies_extra > 0                                   # gain
+  ]
+  
+  # 3 • Liste des sous-clusters tumoraux impliqués ----------------------------
+  #    (on enlève le préfixe "tumor." pour récupérer le nom du subcluster seul)
+  gain_subclusters <- unique(sub("^tumor\\.", "", gain_bins$cell_id))
+  if (length(gain_subclusters) == 0) {
+    cat(sprintf(
+      "\n⚠️  Aucun sous-cluster tumoral ne montre de gain entre %d et %d Mb.\n",
+      start_mb, end_mb))
+    return(invisible(NULL))
+  }
+  
+  # 4 • Barcodes tumoraux et comptage -----------------------------------------
+  tumor_barcodes <- rownames(meta)[startsWith(rownames(meta), "T_")]
+  subclust_vec   <- meta[tumor_barcodes, "subcluster"]
+  
+  # cellules dont le subcluster fait partie de la liste avec gain
+  cells_with_gain <- tumor_barcodes[subclust_vec %in% gain_subclusters]
+  
+  n_gain  <- length(cells_with_gain)
+  n_total <- length(tumor_barcodes)
+  pct     <- 100 * n_gain / n_total
+  
+  # 5 • Affichage -------------------------------------------------------------
+  cat(sprintf(
+    "\n→ %d cellules tumorales (%.1f %% sur %d) présentent un gain dans %d–%d Mb\n",
+    n_gain, pct, n_total, start_mb, end_mb))
+  cat("   Sous-clusters impliqués :", paste(gain_subclusters, collapse = ", "), "\n")
+  
+  invisible(list(
+    n_gain          = n_gain,
+    n_total_tumor   = n_total,
+    pct_gain        = pct,
+    subclusters_hit = gain_subclusters,
+    cells_with_gain = cells_with_gain      # vecteur de barcodes utiles si besoin
+  ))
+}
+
+
+
+# Fenêtre 35–127 Mb sur le chromosome 10
+compter_cellules_avec_gain_region(hmm, meta, start_int, end_int)
 
 
 # === DETECTION DES POSITIONS ============================================
@@ -376,9 +489,40 @@ ggsave(
   width = 8, height = 4
 )
 
-file.create("results/infercnv/.done")
+###############################################################################
+##  Résumé écrit + figure
+###############################################################################
+###############################################################################
+##  RÉSUMÉ EN % + FIGURE
+###############################################################################
+library(data.table)
+library(ggplot2)
 
+###  A • Fonctions utilitaires ----------------------------------------------
+percent_extra <- function(x) round(x / 2 * 100, 2)   # copies_extra → %
 
+###  B • Table des métriques -------------------------------------------------
+summary_df <- data.frame(
+  métrique = c("Gain global chr10 (tumeur) [% ADN +]",
+               "Gain moyen 35–125 Mb (tumeur – normal) [% ADN +]",
+               paste0("Gain moyen chr10 – ", subclust, " [% ADN +]"),
+               paste0("Gain moyen 35–127 Mb – ", subclust, " [% ADN +]"),
+               "Cellules tumorales avec gain 35–127 Mb [% cellules]"),
+  valeur = c(
+    round(total_gain_percent, 2),                                        # déjà en %
+    percent_extra(gain_vs_norm),                                         # copies → %
+    percent_extra(mean(hmm_s7$copies_extra, na.rm = TRUE)),              # chr10
+    percent_extra(mean(hmm_s7[start >= start_int*1e6 &
+                                end   <= end_int*1e6]$copies_extra,
+                       na.rm = TRUE)),                                   # fenêtre
+    round(compter_cellules_avec_gain_region(hmm, meta,
+                                            start_int, end_int)$pct_gain, 1)
+  )
+)
+
+summary_df
+
+file.create(file.path(opt$out_dir, ".done"))
 
 
 
