@@ -1,5 +1,28 @@
 #!/usr/bin/env Rscript
 
+# Vérifie et installe IRanges et infercnv si nécessaire
+if (!requireNamespace("IRanges", quietly = TRUE)) {
+  if (!requireNamespace("BiocManager", quietly = TRUE)) {
+    install.packages("BiocManager")
+  }
+  BiocManager::install("IRanges")
+}
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("S4Arrays")
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+ install.packages("BiocManager")
+BiocManager::install("infercnv")
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+ install.packages("BiocManager")
+
+BiocManager::install("rhdf5")
+
+
 suppressPackageStartupMessages({
   library(optparse)  # à inclure dans l'env Conda
   library(rhdf5)
