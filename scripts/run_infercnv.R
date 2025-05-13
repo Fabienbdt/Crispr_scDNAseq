@@ -5,7 +5,6 @@ suppressPackageStartupMessages({
   library(rhdf5)
   library(Matrix)
   library(infercnv)
-  library(GenomicRanges)
   library(IRanges)
   library(Seurat)
   library(ggplot2)
@@ -31,9 +30,10 @@ option_list <- list(
   make_option("--out_dir",        type="character", default="infercnv_out")
 )
 
-dir.create(opt$out_dir, recursive = TRUE, showWarnings = FALSE)
 
 opt <- parse_args(OptionParser(option_list = option_list))
+dir.create(opt$out_dir, recursive = TRUE, showWarnings = FALSE)
+
 
 # ─── Initialisation globale ─────────────────────────────────────────────
 set.seed(opt$seed)
