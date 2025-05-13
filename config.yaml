@@ -3,9 +3,6 @@ repo_url: "git@gitlab.emi.u-bordeaux.fr:crispr/snake.git"
 
 #data à importer :
 
-data:
-  run1_file: "data/RUN1_S1_hFF_WT.dna.h5"
-  run2_file: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
 
 
 # chemins ou wrappers à lancer
@@ -19,8 +16,8 @@ scripts:
 params:
 
   infercnv:
-    run1_file:   "RUN1_S1_hFF_WT.dna.h5"
-    run2_file:   "RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
+    run1_file:   "data/RUN1_S1_hFF_WT.dna.h5"
+    run2_file:   "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
     chrom:       "10"
     max_cells:   5000
     min_reads:   100
