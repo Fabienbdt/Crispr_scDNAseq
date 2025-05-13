@@ -31,6 +31,8 @@ option_list <- list(
   make_option("--out_dir",        type="character", default="infercnv_out")
 )
 
+dir.create(opt$out_dir, recursive = TRUE, showWarnings = FALSE)
+
 opt <- parse_args(OptionParser(option_list = option_list))
 
 # ─── Initialisation globale ─────────────────────────────────────────────
@@ -106,18 +108,19 @@ annotation_df <- data.frame(
   cell_type = ifelse(startsWith(bc_all, "T_"), "tumor", "normal")
 )
 
-write.table(annotation_df, "annotation.txt", sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
-write.table(run1$gene_df, "gene_order.txt", sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+write.table(annotation_df, file.path(opt$out_dir, "annotation.txt"), sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+write.table(run1$gene_df, file.path(opt$out_dir, "gene_order.txt"), sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
 
 # ─── Création de l’objet InferCNV ────────────────────────────────────────
 unlink(opt$out_dir, recursive = TRUE)  # nettoyage éventuel
 
 inf_obj <- CreateInfercnvObject(
   raw_counts_matrix = counts,
-  annotations_file  = "annotation.txt",
-  gene_order_file   = "gene_order.txt",
+  annotations_file  = file.path(opt$out_dir, "annotation.txt"),
+  gene_order_file   = file.path(opt$out_dir, "gene_order.txt"),
   ref_group_names   = "normal"
 )
+
 
 cat(">>> Lancement d'inferCNV...\n")
 inf_obj <- infercnv::run(
@@ -134,7 +137,7 @@ inf_obj <- infercnv::run(
 # ─── Création objet Seurat avec les mêmes données ────────────────────────
 seu <- CreateSeuratObject(counts = counts)
 
-annotations <- read.table("annotation.txt", sep = "\t", header = FALSE, col.names = c("cell", "type"))
+annotations <- read.table(file.path(opt$out_dir, "annotation.txt"), sep = "\t", header = FALSE, col.names = c("cell", "type"))
 seu$cell_type <- annotations$type[match(colnames(seu), annotations$cell)]
 
 # (Optionnel pour la suite : UMAP / duplication)
@@ -296,7 +299,10 @@ p <- DimPlot(
   cols = "lightgrey"
 ) + ggtitle("Tumor cells with chr10 duplication ≥ 0.2")
 
-ggsave(filename = file.path(opt$out_dir, "duplication_chr10_umap.pdf"), plot = p, width = 8, height = 6)
+ggsave(
+  filename = file.path(opt$out_dir, "duplication_chr10_umap.pdf"),
+  plot = p, width = 8, height = 6
+)
 
 # Fonctions utilitaires
 percent_extra <- function(x) round(x / 2 * 100, 2)  # copies supplémentaires → % ADN
@@ -320,7 +326,7 @@ summary_df <- data.frame(
 )
 
 # Sauvegardes
-write.csv(summary_df, file = "résumé_gains_chr10_pourcent.csv", row.names = FALSE)
+write.csv(summary_df, file = file.path(opt$out_dir, "résumé_gains_chr10_pourcent.csv"), row.names = FALSE)
 
 file.create(file.path(opt$out_dir, ".done"))
 
