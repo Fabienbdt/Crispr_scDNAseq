@@ -63,7 +63,15 @@ Puis installe l’environnement R :
 conda env create -f envs/r.yml
 conda activate snake_env
 ```
+### TEST D'UN SCRIPTS UNIQUE  : EX avec run_infercnv.R:
+```bash
 
+Rscript scripts/run_infercnv.R \
+  --NormalCellFile data/RUN1_S1_hFF_WT.dna.h5 \
+  --TumorCellFile  data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5 \
+  --out_dir results/infercnv
+
+```
 
 ##  Étape 1 — Configurer config.yaml
 Modifie le fichier config.yaml pour lister tes scripts et leurs arguments :
