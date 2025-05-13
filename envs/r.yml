@@ -13,6 +13,10 @@ dependencies:
   - r-matrix
   - r-genomicranges
   - python=3.10
+  - r-iranges
+  - r-data.table
+
+
   - pip
   - pip:
       - mosaicatcher # ← si l’outil Python est disponible sur pip
