@@ -11,7 +11,6 @@ dependencies:
   - r-ggplot2
   - r-rhdf5
   - r-matrix
-  - r-genomicranges
   - python=3.10
   - r-iranges
   - r-data.table
