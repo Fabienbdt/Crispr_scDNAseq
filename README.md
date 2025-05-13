@@ -36,7 +36,7 @@ cd Crispr_scDNAseq
 ```
 
 
-###. Ajouter vos fichiers .h5 (non versionnés)
+### Ajouter vos fichiers .h5 (non versionnés)
 Créez le dossier data/ et ajoutez vos fichiers .h5 :
 
 ```bash
