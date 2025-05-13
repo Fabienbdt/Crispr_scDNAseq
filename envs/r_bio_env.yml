@@ -8,7 +8,5 @@ dependencies:
   - r-dplyr
   - r-ggplot2
   - r-optparse
-  - r-rhdf5
   - r-matrix
-  - r-iranges
   - r-data.table
