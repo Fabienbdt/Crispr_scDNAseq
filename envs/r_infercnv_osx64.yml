@@ -1,0 +1,16 @@
+name: r_infercnv_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - r-base=4.3
+  - r-infercnv
+  - r-seurat
+  - r-dplyr
+  - r-ggplot2
+  - r-optparse
+  - r-rhdf5
+  - r-matrix
+  - r-iranges
+  - r-data.table
