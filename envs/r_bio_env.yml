@@ -4,18 +4,11 @@ channels:
   - bioconda
 dependencies:
   - r-base=4.3
-  - r-optparse
-  - r-infercnv
   - r-seurat
   - r-dplyr
   - r-ggplot2
+  - r-optparse
   - r-rhdf5
   - r-matrix
-  - python=3.10
   - r-iranges
   - r-data.table
-
-
-  - pip
-  - pip:
-      - mosaicatcher # ← si l’outil Python est disponible sur pip
