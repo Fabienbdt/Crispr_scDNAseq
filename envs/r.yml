@@ -3,11 +3,12 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - r-rhdf5
   - r-base=4.3
+  - r-optparse
   - r-seurat
   - r-dplyr
   - r-ggplot2
-  - r-optparse
   - r-matrix
   - r-data.table
+  - r-infercnv
+  - r-rhdf5         # ← ici uniquement !
