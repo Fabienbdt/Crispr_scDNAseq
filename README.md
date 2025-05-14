@@ -97,7 +97,7 @@ params: (optionnel) : arguments à passer au script correspondant.
 
 Depuis le dossier contenant le snakefile, exécute :
 ```bash
-snakemake --use-conda --cores 4
+snakemake --use-singularity --cores 4
 ```
 
 ## Étape 3 — Consulter les résultats
