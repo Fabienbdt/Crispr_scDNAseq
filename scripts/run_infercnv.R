@@ -22,9 +22,6 @@ if (!requireNamespace("infercnv", quietly = TRUE)) {
   BiocManager::install("infercnv")
 }
 
-if (!requireNamespace("rhdf5", quietly = TRUE)) {
-  BiocManager::install("rhdf5", ask = FALSE, update = FALSE)
-}
 
 
 
