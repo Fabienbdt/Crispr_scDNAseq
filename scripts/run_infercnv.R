@@ -1,33 +1,25 @@
 #!/usr/bin/env Rscript
-
-# Forcer l'utilisation d'une version compatible de Bioconductor
-if (!requireNamespace("BiocManager", quietly = TRUE))
+# Vérifier et installer BiocManager si nécessaire
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
+}
 
-BiocManager::install(version = "3.17")  # ← compatible avec R 4.3.x
+# 🔒 Forcer une version compatible de Bioconductor avec R 4.3
+BiocManager::install(version = "3.17")
 
-
-# Vérifie et installe IRanges et infercnv si nécessaire
+# Installer uniquement les paquets non présents
 if (!requireNamespace("IRanges", quietly = TRUE)) {
-  if (!requireNamespace("BiocManager", quietly = TRUE)) {
-    install.packages("BiocManager")
-  }
   BiocManager::install("IRanges")
 }
 
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
+if (!requireNamespace("S4Arrays", quietly = TRUE)) {
+  BiocManager::install("S4Arrays")
+}
 
-BiocManager::install("S4Arrays")
+if (!requireNamespace("infercnv", quietly = TRUE)) {
+  BiocManager::install("infercnv")
+}
 
-if (!requireNamespace("BiocManager", quietly = TRUE))
- install.packages("BiocManager")
-BiocManager::install("infercnv")
-
-if (!requireNamespace("BiocManager", quietly = TRUE))
- install.packages("BiocManager")
-
-BiocManager::install("rhdf5")
 
 
 suppressPackageStartupMessages({
