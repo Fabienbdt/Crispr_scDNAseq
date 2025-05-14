@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
+  - r-rhdf5
   - r-base=4.3
   - r-seurat
   - r-dplyr
