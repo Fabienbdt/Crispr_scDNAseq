@@ -4,7 +4,7 @@
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 
-BiocManager::install(version = "3.21")  # ← compatible avec R 4.3.x
+BiocManager::install(version = "3.17")  # ← compatible avec R 4.3.x
 
 
 # Vérifie et installe IRanges et infercnv si nécessaire
