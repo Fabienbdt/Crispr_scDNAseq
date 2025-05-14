@@ -63,15 +63,20 @@ Puis installe l’environnement R :
 conda env create -f envs/r.yml
 conda activate snake_env
 ```
-### TEST D'UN SCRIPTS UNIQUE  : EX avec run_infercnv.R:
+
+### Pour l'utilisation de inferCNV sur différents système d'exploitation : 
+
+🐳 Construction du conteneur Docker pour infercnv
+
+Installez docker si message d'erreur du type : zsh: command not found: docker
 ```bash
 
-Rscript scripts/run_infercnv.R \
-  --NormalCellFile data/RUN1_S1_hFF_WT.dna.h5 \
-  --TumorCellFile  data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5 \
-  --out_dir results/infercnv
+docker build -t crispr_infercnv .
 
 ```
+L’image inclut R 4.3, infercnv, rhdf5 et toutes ses dépendances. Elle sera utilisée automatiquement par Snakemake pour cette tâche.
+
+
 
 ##  Étape 1 — Configurer config.yaml
 Modifie le fichier config.yaml pour lister tes scripts et leurs arguments :
@@ -99,6 +104,7 @@ Depuis le dossier contenant le snakefile, exécute :
 ```bash
 snakemake --use-singularity --cores 4
 ```
+⚠️ --use-singularity fonctionne aussi avec Docker sur les systèmes disposant de Docker Desktop.
 
 ## Étape 3 — Consulter les résultats
 Chaque script est exécuté dans results/<label>/ (ex. results/A/).
@@ -106,12 +112,27 @@ Chaque script est exécuté dans results/<label>/ (ex. results/A/).
 Le résumé de comparaison est généré dans :
 results/comparison/summary.txt
 
+### TEST D'UN SCRIPTS UNIQUE  : EX avec run_infercnv.R:
+
+
+
+```bash
+
+docker run --rm -v $(pwd):/work -w /work crispr_infercnv \
+  Rscript scripts/run_infercnv.R \
+    --NormalCellFile data/RUN1_S1_hFF_WT.dna.h5 \
+    --TumorCellFile  data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5 \
+    --out_dir results/infercnv
+
+
+```
 ## Personnalisation
 Ajoute ou remplace des scripts R dans scripts/.
 
 Ajuste compare_results.py pour des analyses/graphes spécifiques.
 
-Modifie envs/r.yml si tes scripts nécessitent d’autres packages R.
+Adaptez le Dockerfile si vos scripts requièrent d’autres packages
+
 
 ## Crédits & Contact
 Développé par Fabien Bidet ; Raphael Edery ; Ziyi Zhao ; Tom Bourrachot — Université de Bordeaux
