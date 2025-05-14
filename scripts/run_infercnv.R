@@ -1,4 +1,6 @@
 #!/usr/bin/env Rscript
+options(repos = c(CRAN = "https://cran.r-project.org"))
+
 # Vérifier et installer BiocManager si nécessaire
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager")
