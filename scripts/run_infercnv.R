@@ -1,5 +1,12 @@
 #!/usr/bin/env Rscript
 
+# Forcer l'utilisation d'une version compatible de Bioconductor
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install(version = "3.21")  # ← compatible avec R 4.3.x
+
+
 # Vérifie et installe IRanges et infercnv si nécessaire
 if (!requireNamespace("IRanges", quietly = TRUE)) {
   if (!requireNamespace("BiocManager", quietly = TRUE)) {
