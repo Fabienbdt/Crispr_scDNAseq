@@ -7,7 +7,7 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) {
 }
 
 # 🔒 Forcer une version compatible de Bioconductor avec R 4.3
-BiocManager::install(version = "3.17")
+BiocManager::install(version = "3.17", ask = FALSE)
 
 # Installer uniquement les paquets non présents
 if (!requireNamespace("IRanges", quietly = TRUE)) {
