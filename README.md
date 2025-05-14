@@ -1,14 +1,16 @@
 ![Last Commit](https://img.shields.io/github/last-commit/Fabienbdt/Crispr_scDNAseq)
 
-# Snake — Pipeline Snakemake pour exécuter et comparer des scripts R
+#  Snake — Pipeline Snakemake pour exécuter et comparer des scripts R
 
+Ce projet fournit un pipeline reproductible basé sur **Snakemake**.  
+Il exécute automatiquement plusieurs scripts R présents dans `scripts/`, accepte des paramètres personnalisables via `config.yaml`, puis compare leurs résultats.
 
+---
 
-## Ce projet fournit un pipeline reproductible basé sur **Snakemake**. Il exécute automatiquement plusieurs scripts R présents dans `scripts/`, accepte des paramètres personnalisables via `config.yaml`, puis compare leurs résultats
+##  Structure du projet
 
-## Structure du projet
-```arduino
-Snake/
+```bash
+Crispr_scDNAseq/
 ├── Snakefile
 ├── config.yaml
 ├── envs/
@@ -18,9 +20,9 @@ Snake/
 │   ├── karyotapR.R
 │   ├── mosaic.py
 │   └── compare_results.py
-└── results/
+├── results/
+└── Dockerfile  # pour exécuter infercnv dans un conteneur
 ```
-
 ## Prérequis
 
 * Python ≥ 3.8  
