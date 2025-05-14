@@ -16,7 +16,7 @@ rule all:
 # ─────────────────────────────────────────────────────────────
 rule infercnv:
     input:
-        script = SCRIPTS["infercnv"]
+        script = SCRIPTS["run_infercnv.R"]
     output:
         "results/infercnv/.done"
     params:
