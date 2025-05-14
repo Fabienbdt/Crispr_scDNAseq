@@ -1,29 +1,4 @@
 #!/usr/bin/env Rscript
-options(repos = c(CRAN = "https://cran.r-project.org"))
-
-# Vérifier et installer BiocManager si nécessaire
-if (!requireNamespace("BiocManager", quietly = TRUE)) {
-  install.packages("BiocManager")
-}
-
-# 🔒 Forcer une version compatible de Bioconductor avec R 4.3
-BiocManager::install(version = "3.17", ask = FALSE)
-
-# Installer uniquement les paquets non présents
-if (!requireNamespace("IRanges", quietly = TRUE)) {
-  BiocManager::install("IRanges")
-}
-
-if (!requireNamespace("S4Arrays", quietly = TRUE)) {
-  BiocManager::install("S4Arrays")
-}
-
-if (!requireNamespace("infercnv", quietly = TRUE)) {
-  BiocManager::install("infercnv")
-}
-
-
-
 
 suppressPackageStartupMessages({
   library(optparse)  # à inclure dans l'env Conda
