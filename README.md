@@ -13,6 +13,9 @@ Il exécute automatiquement plusieurs scripts R présents dans `scripts/`, accep
 Crispr_scDNAseq/
 ├── Snakefile
 ├── config.yaml
+├── data
+ └── fichier A.h5
+ └── fichier B.h5
 ├── envs/
 │   └── r.yml
 ├── scripts/
