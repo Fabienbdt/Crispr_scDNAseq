@@ -11,9 +11,5 @@ dependencies:
   - r-ggplot2
   - r-matrix
   - r-data.table
-  - r-rhdf5
-  - r-infercnv
   - r-edger
   - r-locfit
-  - r-jags
-  - libjags        # nécessaire pour rjags
