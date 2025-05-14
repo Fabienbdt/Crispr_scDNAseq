@@ -14,8 +14,8 @@ suppressPackageStartupMessages({
 
 # ─── Définir les options de ligne de commande ───────────────────────────
 option_list <- list(
-  make_option("--NormalCellFile", type="character", default = "RUN1_S1_hFF_WT.dna.h5"),
-  make_option("--TumorCellFile",  type="character", default = "RUN2_S8_hFF_clone_6_KOfluo.dna.h5"),
+  make_option("--NormalCellFile", type="character", default = "data/RUN1_S1_hFF_WT.dna.h5"),
+  make_option("--TumorCellFile",  type="character", default = "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"),
   make_option("--chrom",          type="character", default="10"),
   make_option("--max_cells",      type="integer",   default=5000),
   make_option("--min_reads",      type="integer",   default=100),
@@ -27,11 +27,11 @@ option_list <- list(
   make_option("--cutoff",         type="double",    default=0.1),
   make_option("--workdir",        type="character", default=getwd()),
   make_option("--HMM",            type="character", default="i6"),
-  make_option("--out_dir",        type="character", default="infercnv_out")
+  make_option("--out_dir",        type="character", default="./results/infercnv_out")
 )
 
-
 opt <- parse_args(OptionParser(option_list = option_list))
+unlink(opt$out_dir, recursive = TRUE)  # nettoyage éventuel
 dir.create(opt$out_dir, recursive = TRUE, showWarnings = FALSE)
 
 
@@ -112,7 +112,7 @@ write.table(annotation_df, file.path(opt$out_dir, "annotation.txt"), sep = "\t",
 write.table(run1$gene_df, file.path(opt$out_dir, "gene_order.txt"), sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
 
 # ─── Création de l’objet InferCNV ────────────────────────────────────────
-unlink(opt$out_dir, recursive = TRUE)  # nettoyage éventuel
+
 
 inf_obj <- CreateInfercnvObject(
   raw_counts_matrix = counts,
@@ -329,4 +329,6 @@ summary_df <- data.frame(
 write.csv(summary_df, file = file.path(opt$out_dir, "résumé_gains_chr10_pourcent.csv"), row.names = FALSE)
 
 file.create(file.path(opt$out_dir, ".done"))
+
+
 
