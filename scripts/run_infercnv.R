@@ -214,6 +214,8 @@ résumer_gain_vs_norm <- function(hmm_tumor, hmm_norm, label,
 
 # Extraire uniquement les lignes tumorales
 hmm_tumor <- hmm[grepl("^tumor\\.", cell_id)]
+hmm_tumor <- hmm_tumor[order(hmm_tumor$start,)]
+
 
 # Extraire le nom du sous-cluster (ex: tumor.s9 → s9)
 hmm_tumor[, subcluster := sub("^tumor\\.", "", cell_id)]
@@ -238,6 +240,8 @@ cells_sclust <- rownames(meta)[meta$subcluster == subclust]
 cells_tumor  <- rownames(meta)[startsWith(rownames(meta), "T_")]
 
 hmm_sclust <- hmm[cell_id == paste0("tumor.", subclust)]
+hmm_sclust <- hmm_sclust[order(hmm_sclust$start), ]
+
 hmm_norm <- hmm[startsWith(cell_id, "normal.")]
 
 résumer_gain_vs_norm(hmm_sclust, hmm_norm, subclust,
@@ -297,7 +301,7 @@ p <- DimPlot(
   cells.highlight = dupTumor,
   cols.highlight = "red",
   cols = "lightgrey"
-) + ggtitle("Tumor cells with chr10 duplication ≥ 0.2")
+) + ggtitle("Cellules tumorales avec un gain ≥ 0.2")
 
 ggsave(
   filename = file.path(opt$out_dir, "duplication_chr10_umap.pdf"),
@@ -310,7 +314,7 @@ percent_extra <- function(x) round(x / 2 * 100, 2)  # copies supplémentaires �
 # Compilation des valeurs
 summary_df <- data.frame(
   métrique = c(
-    "Gain global chr10 (tumeur) [% ADN +]",
+    "Gain global chr10 (tumor) [% ADN +]",
     "Gain moyen 35–125 Mb (tumor – normal) [% ADN +]",
     sprintf("Gain moyen chr10 – %s", subclust),
     sprintf("Gain moyen 35–127 Mb – %s", subclust),
@@ -326,8 +330,9 @@ summary_df <- data.frame(
 )
 
 # Sauvegardes
-write.csv(summary_df, file = file.path(opt$out_dir, "résumé_gains_chr10_pourcent.csv"), row.names = FALSE)
-
+write.csv(summary_df, file = file.path(opt$out_dir, "final_compare.csv"), row.names = FALSE)
+write.csv(hmm_sclust, file = file.path(opt$out_dir, "résumé_CNV_tumor_subscluster_max_dupli.csv"), row.names = FALSE)
+write.csv(hmm_tumor, file = file.path(opt$out_dir, "résumé_CNV_all_subscluster_tumor.csv"), row.names = FALSE)
 file.create(file.path(opt$out_dir, ".done"))
 
 
