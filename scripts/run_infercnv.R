@@ -113,6 +113,18 @@ write.table(run1$gene_df, file.path(opt$out_dir, "gene_order.txt"), sep = "\t", 
 
 # ─── Création de l’objet InferCNV ────────────────────────────────────────
 
+# ─── Création objet Seurat avec les mêmes données ────────────────────────
+seu <- CreateSeuratObject(counts = counts)
+
+annotations <- read.table(file.path(opt$out_dir, "annotation.txt"), sep = "\t", header = FALSE, col.names = c("cell", "type"))
+seu$cell_type <- annotations$type[match(colnames(seu), annotations$cell)]
+
+# (Optionnel pour la suite : UMAP / duplication)
+seu <- NormalizeData(seu)
+seu <- FindVariableFeatures(seu)
+seu <- ScaleData(seu)
+seu <- RunPCA(seu, npcs = 30)
+seu <- RunUMAP(seu, dims = 1:20)
 
 inf_obj <- CreateInfercnvObject(
   raw_counts_matrix = counts,
@@ -134,18 +146,6 @@ inf_obj <- infercnv::run(
   leiden_resolution  = 0.001
 )
 
-# ─── Création objet Seurat avec les mêmes données ────────────────────────
-seu <- CreateSeuratObject(counts = counts)
-
-annotations <- read.table(file.path(opt$out_dir, "annotation.txt"), sep = "\t", header = FALSE, col.names = c("cell", "type"))
-seu$cell_type <- annotations$type[match(colnames(seu), annotations$cell)]
-
-# (Optionnel pour la suite : UMAP / duplication)
-seu <- NormalizeData(seu)
-seu <- FindVariableFeatures(seu)
-seu <- ScaleData(seu)
-seu <- RunPCA(seu, npcs = 30)
-seu <- RunUMAP(seu, dims = 1:20)
 
 # ─── Ajouter résultats inferCNV au Seurat object ─────────────────────────
 seu <- infercnv::add_to_seurat(seu, infercnv_output_path = opt$out_dir, top_n = 10)
