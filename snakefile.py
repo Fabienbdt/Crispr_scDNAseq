@@ -1,58 +1,31 @@
-################################################################################
-## Snakefile – exécute InferCNV (via Docker), Mosaic, KaryotapR, puis compare ##
-################################################################################
+import os
+import glob
+import pandas as pd
 
-configfile: "config.yaml"
-SCRIPTS = config["scripts"]
+# Chemin racine des résultats
+base_dir = "results"
+output_path = os.path.join(base_dir, "comparison", "summary.txt")
+os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-def build_args(tool):
-    return " ".join(f"--{k} {v}" for k, v in config["params"].get(tool, {}).items())
+# Dictionnaire pour stocker les résultats
+summaries = {}
 
-rule all:
-    input: "results/comparison/summary.txt"
+# Recherche uniquement les fichiers nommés final_compare.csv
+for csv_path in glob.glob(os.path.join(base_dir, "*", "final_compare.csv")):
+    tool_name = os.path.basename(os.path.dirname(csv_path))  # ex: infercnv_out
+    try:
+        df = pd.read_csv(csv_path)
+        summaries[tool_name] = df
+    except Exception as e:
+        print(f"⚠️ Erreur lors de la lecture de {csv_path}: {e}")
 
-# ──────────────── Rule pour InferCNV (via Docker) ────────────────────────
-rule infercnv:
-    input:
-        script = SCRIPTS["infercnv"]
-    output:
-        "results/infercnv/.done"
-    params:
-        args = build_args("infercnv")
-    container:
-        "crispr_infercnv:latest"
-    shell:
-        """
-        mkdir -p results/infercnv
-        Rscript {input.script} {params.args} && touch {output}
-        """
-
-# ──────────────── Rule générique pour Mosaic & KaryotapR ────────────────
-rule run_tool:
-    input:
-        script = lambda wc: SCRIPTS[wc.label]
-    output:
-        "results/{label}/.done"
-    params:
-        args = lambda wc: build_args(wc.label)
-    conda:
-        lambda wc: "envs/r.yml"
-    shell:
-        """
-        mkdir -p results/{wildcards.label}
-        {{ 'Rscript' if input.script.endswith('.R') else 'python' }} {input.script} {params.args} && touch {output}
-        """
-
-# ──────────────── Comparaison finale, même si certains résultats manquent ────────────────
-rule compare:
-    input:
-        script = SCRIPTS["compare"]
-    output:
-        "results/comparison/summary.txt"
-    conda:
-        "envs/r.yml"
-    shell:
-        """
-        mkdir -p results/comparison
-        python {input.script} > {output} || echo '[⚠️ compare_results.py terminé avec avertissements]'
-        """
+# Écrire la synthèse dans un fichier texte
+with open(output_path, "w") as f:
+    if summaries:
+        for tool, df in summaries.items():
+            f.write(f"=== Résultats pour {tool.upper()} ===\n")
+            f.write(df.to_string(index=False))
+            f.write("\n\n")
+    else:
+        f.write("Aucun fichier final_compare.csv trouvé dans les sous-dossiers de 'results/'.\n")
+        print("⚠️ Aucun fichier final_compare.csv trouvé.")
