@@ -11,9 +11,7 @@ def build_args(tool):
 rule all:
     input: "results/comparison/summary.txt"
 
-# ─────────────────────────────────────────────────────────────
-# Rule pour InferCNV – exécutée dans un conteneur Docker
-# ─────────────────────────────────────────────────────────────
+# ──────────────── Rule pour InferCNV (via Docker) ────────────────────────
 rule infercnv:
     input:
         script = SCRIPTS["infercnv"]
@@ -26,13 +24,10 @@ rule infercnv:
     shell:
         """
         mkdir -p results/infercnv
-        Rscript {input.script} {params.args}
-        touch {output}
+        Rscript {input.script} {params.args} && touch {output}
         """
 
-# ─────────────────────────────────────────────────────────────
-# Rule générique pour Mosaic et KaryotapR – reste avec Conda
-# ─────────────────────────────────────────────────────────────
+# ──────────────── Rule générique pour Mosaic & KaryotapR ────────────────
 rule run_tool:
     input:
         script = lambda wc: SCRIPTS[wc.label]
@@ -45,19 +40,19 @@ rule run_tool:
     shell:
         """
         mkdir -p results/{wildcards.label}
-        {{ 'Rscript' if input.script.endswith('.R') else 'python' }} {input.script} {params.args}
-        touch {output}
+        {{ 'Rscript' if input.script.endswith('.R') else 'python' }} {input.script} {params.args} && touch {output}
         """
 
-# ─────────────────────────────────────────────────────────────
-# Comparaison finale
-# ─────────────────────────────────────────────────────────────
+# ──────────────── Comparaison finale, même si certains résultats manquent ────────────────
 rule compare:
     input:
-        expand("results/{label}/.done", label=["infercnv", "mosaic", "karyotapr"])
+        script = SCRIPTS["compare"]
     output:
         "results/comparison/summary.txt"
     conda:
         "envs/r.yml"
     shell:
-        "python {SCRIPTS['compare']} > {output}"
+        """
+        mkdir -p results/comparison
+        python {input.script} > {output} || echo '[⚠️ compare_results.py terminé avec avertissements]'
+        """
