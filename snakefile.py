@@ -1,31 +1,48 @@
-import os
-import glob
-import pandas as pd
+configfile: "config.yaml"
+SCRIPTS = config["scripts"]
 
-# Chemin racine des résultats
-base_dir = "results"
-output_path = os.path.join(base_dir, "comparison", "summary.txt")
-os.makedirs(os.path.dirname(output_path), exist_ok=True)
+def build_args(tool):
+    return " ".join(f"--{k} {v}" for k, v in config["params"].get(tool, {}).items())
 
-# Dictionnaire pour stocker les résultats
-summaries = {}
+rule all:
+    input: "results/comparison/summary.txt"
 
-# Recherche uniquement les fichiers nommés final_compare.csv
-for csv_path in glob.glob(os.path.join(base_dir, "*", "final_compare.csv")):
-    tool_name = os.path.basename(os.path.dirname(csv_path))  # ex: infercnv_out
-    try:
-        df = pd.read_csv(csv_path)
-        summaries[tool_name] = df
-    except Exception as e:
-        print(f"⚠️ Erreur lors de la lecture de {csv_path}: {e}")
+rule infercnv:
+    input:
+        script = SCRIPTS["infercnv"]
+    output:
+        "results/infercnv_out/final_compare.csv"
+    params:
+        args = build_args("infercnv")
+    container:
+        "docker://crispr_infercnv:latest"
+    shell:
+        """
+        mkdir -p results/infercnv_out
+        Rscript {input.script} {params.args} || echo "infercnv failed" > {output}
+        """
 
-# Écrire la synthèse dans un fichier texte
-with open(output_path, "w") as f:
-    if summaries:
-        for tool, df in summaries.items():
-            f.write(f"=== Résultats pour {tool.upper()} ===\n")
-            f.write(df.to_string(index=False))
-            f.write("\n\n")
-    else:
-        f.write("Aucun fichier final_compare.csv trouvé dans les sous-dossiers de 'results/'.\n")
-        print("⚠️ Aucun fichier final_compare.csv trouvé.")
+rule run_tool:
+    input:
+        script = lambda wc: SCRIPTS[wc.label]
+    output:
+        "results/{label}_out/final_compare.csv"
+    params:
+        args = lambda wc: build_args(wc.label)
+    conda:
+        "envs/r.yml"
+    shell:
+        """
+        mkdir -p results/{wildcards.label}_out
+        {{ 'Rscript' if input.script.endswith('.R') else 'python' }} {input.script} {params.args} || echo "{wildcards.label} failed" > {output}
+        """
+
+rule compare:
+    input:
+        expand("results/{label}_out/final_compare.csv", label=["infercnv", "mosaic", "karyotapr"])
+    output:
+        "results/comparison/summary.txt"
+    conda:
+        "envs/r.yml"
+    shell:
+        "python {SCRIPTS['compare']}"
