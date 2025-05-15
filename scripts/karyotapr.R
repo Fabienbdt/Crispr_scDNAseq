@@ -13,7 +13,7 @@ option_list <- list(
   make_option("--run2_file", type = "character", default = "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"),
   make_option("--panel",     type = "character", default = "CO261"),
   make_option("--design",    type = "character", default = "data/6969-design-summary.csv"),
-  make_option("--out_dir",   type = "character", default = "results/karyotapr")
+  make_option("--out_dir",   type = "character", default = "results/karyotapr_out")
 )
 
 opt <- parse_args(OptionParser(option_list = option_list))
@@ -76,7 +76,7 @@ summary_df <- data.frame(
 )
 
 
-write.csv(summary_df, file.path(opt$out_dir, "karyotapR_results.csv"), row.names = FALSE, quote = FALSE)
+write.csv(summary_df, file.path(opt$out_dir, "final_compare.csv"), row.names = FALSE, quote = FALSE)
 
 # --- Figure ---
 png(file.path(opt$out_dir, "gain_percentage_chr10_barplot.png"), width = 800, height = 600)
