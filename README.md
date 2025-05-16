@@ -77,8 +77,8 @@ conda activate snake_env
 ```bash
 
 conda env create -f envs/r.yml
-conda env create -f envs/python_h5.yml
-conda env create -f envs/python_mosaic.yml
+conda env create -f envs/h5.yml
+conda env create -f envs/mosaic.yml
 
 ```
 
