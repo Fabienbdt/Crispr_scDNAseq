@@ -3,10 +3,13 @@
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager", repos = "https://cloud.r-project.org")
 }
-if (!requireNamespace("karyotapR", quietly = TRUE)) {
-  BiocManager::install("karyotapR", ask = FALSE)
-}
+BiocManager::install(c(
+  "SingleCellExperiment", "ComplexHeatmap", "GenomicRanges", "IRanges",
+  "rhdf5", "S4Vectors", "SummarizedExperiment"
+), ask = FALSE)
 
+# Enfin, installer karyotapR
+BiocManager::install("karyotapR", ask = FALSE)
 
 
 suppressPackageStartupMessages({
