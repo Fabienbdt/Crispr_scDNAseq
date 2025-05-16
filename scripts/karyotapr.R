@@ -13,7 +13,8 @@ option_list <- list(
   make_option("--run2_file", type = "character", default = "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"),
   make_option("--panel",     type = "character", default = "CO261"),
   make_option("--design",    type = "character", default = "data/6969-design-summary.csv"),
-  make_option("--out_dir",   type = "character", default = "results/karyotapr_out")
+  make_option("--out_dir",   type = "character", default = "results/karyotapr_out")，
+  make_option("--min_reads",  type = "integer",   default = 100)
 )
 
 opt <- parse_args(OptionParser(option_list = option_list))
@@ -25,7 +26,7 @@ te_run1 <- createTapestriExperiment(opt$run1_file, panel.id = opt$panel)
 te_run2 <- createTapestriExperiment(opt$run2_file, panel.id = opt$panel)
 
 # --- QC & Normalisation ---
-qc_filter <- function(te, min_reads = 500, max_mt = 5) {
+qc_filter <- function(te, min_reads = 100, max_mt = 5) {
   cts <- assay(te, "counts")
   total_reads <- colData(te)$total.reads
   mt_idx <- which(rowData(te)$chr %in% c("MT", "chrM"))
@@ -34,8 +35,8 @@ qc_filter <- function(te, min_reads = 500, max_mt = 5) {
   return(te[, keep_cells])
 }
 
-te_run1_norm <- calcNormCounts(qc_filter(te_run1))
-te_run2_norm <- calcNormCounts(qc_filter(te_run2))
+te_run1_norm <- calcNormCounts(qc_filter(te_run1，min_reads = opt$min_reads))
+te_run2_norm <- calcNormCounts(qc_filter(te_run2，min_reads = opt$min_reads))
 
 # --- Charger le design ---
 design_df <- read.csv(opt$design, stringsAsFactors = FALSE, check.names = FALSE)
@@ -83,7 +84,7 @@ png(file.path(opt$out_dir, "gain_percentage_chr10_barplot.png"), width = 800, he
 mat <- t(as.matrix(summary_df[, c("Run1_Cellules_pct", "Run2_Cellules_pct")]))
 colnames(mat) <- summary_df$Region
 barplot(mat, beside = TRUE, col = c("steelblue", "tomato"),
-        legend.text = rownames(mat), args.legend = list(x = "topright", bty = "n"),
+        legend.text = rownames(mat), args.legend = list(x = "topleft", bty = "n"),
         ylab = "Pourcentage de cellules avec gain (%)",
         main = "Comparaison gain chr10 centromérique / télomérique")
 dev.off()
