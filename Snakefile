@@ -13,7 +13,7 @@ rule all:
 # ────────────────────────────
 rule infercnv:
     input:
-        script = SCRIPTS["infercnv.R"]
+        script = SCRIPTS["infercnv]
     output:
         "results/infercnv/.done"
     params:
@@ -32,7 +32,7 @@ rule infercnv:
 # ────────────────────────────
 rule python_h5:
     input:
-        script = config["scripts"]["python_h5.py"]
+        script = config["scripts"]["python_h5"]
     output:
         "results/python_h5/.done"
     params:
@@ -52,7 +52,7 @@ rule python_h5:
 # ────────────────────────────
 rule manual_analysis:
     input:
-        script = SCRIPTS["mosaic_experimental.py"]
+        script = SCRIPTS["mosaic_experimental"]
     output:
         "results/mosaic_experimental/.done"
     params:
@@ -71,7 +71,7 @@ rule manual_analysis:
 # ────────────────────────────
 rule karyotapr:
     input:
-        script = SCRIPTS["karyotapr.R"]
+        script = SCRIPTS["karyotapr"]
     output:
         "results/karyotapr/.done"
     params:
