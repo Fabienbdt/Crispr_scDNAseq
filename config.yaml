@@ -2,8 +2,8 @@ repo_url: "git@gitlab.emi.u-bordeaux.fr:crispr/snake.git"
 
 scripts:
   infercnv:  "scripts/infercnv.R"
-  python_h5: "scripts/h5.py"
-  mosaic_experimental: "scripts/mosaic.py"
+  h5: "scripts/h5.py"
+  mosaic: "scripts/mosaic.py"
   karyotapr: "scripts/karyotapR.R"
   compare:   "scripts/compare_results.py"
 
