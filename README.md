@@ -100,16 +100,16 @@ Modifie le fichier config.yaml pour lister tes scripts et leurs arguments :
 
 ```yaml
 scripts:
-  infercnv: "scripts/run_infercnv.R"
-  karyotapr: "scripts/run_karyotapR.R"
-  mosaic_functional: "scripts/Analyse_CNV_Manuelle.py"
-  mosaic_experimental: "scripts/Mosaic_Experimental.py"
+  infercnv: "scripts/infercnv.R"
+  karyotapr: "scripts/karyotapR.R"
+  h5: "scripts/h5.py"
+  mosaic: "scripts/mosaic.py"
   compare: "scripts/compare_results.py"
 
 params:
   infercnv:
-    run1_file: "data/RUN1_S1_hFF_WT.dna.h5"
-    run2_file: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
+    NormalCellFile: "data/RUN1_S1_hFF_WT.dna.h5"
+    TumorCellFile: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
     chrom: "10"
     out_dir: "results/infercnv"
   karyotapr:
