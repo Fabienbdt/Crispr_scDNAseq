@@ -31,8 +31,8 @@ params:
     output: "results/h5"
 
   mosaic:
-    run2_file: "data/RUN1_S1_hFF_WT.dna.h5"
-    run1_file: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
+    wt: "data/RUN1_S1_hFF_WT.dna.h5"
+    crispr: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
     bed: "data/6969-amplicon.bed"
     threshold: 1.5
     distance: 50000
