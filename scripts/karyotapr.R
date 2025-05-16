@@ -6,6 +6,7 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) {
 if (!requireNamespace("edgeR", quietly = TRUE)) {
   BiocManager::install("edgeR")
 }
+install.packages('karyotapR')
 
 
 suppressPackageStartupMessages({
