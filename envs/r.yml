@@ -2,12 +2,20 @@ name: r
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - r-base=4.3
   - r-optparse
+  - r-seurat
   - r-dplyr
   - r-ggplot2
+  - r-matrix
   - r-data.table
-  - r-biocmanager
-  # - r-seurat  # <--- active si besoin pour UMAP ou Seurat::CreateSeuratObject
+  - r-locfit
+  - bioconductor-biocmanager
+  - bioconductor-rhdf5
+  - bioconductor-iranges
+  - bioconductor-genomicranges
+  - bioconductor-s4vectors
+  - bioconductor-summarizedexperiment
+  - bioconductor-singlecellexperiment
+  - bioconductor-complexheatmap
