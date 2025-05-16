@@ -1,58 +1,48 @@
-# config.yaml
 repo_url: "git@gitlab.emi.u-bordeaux.fr:crispr/snake.git"
 
-#data à importer :
-
-
-
-# chemins ou wrappers à lancer
 scripts:
   infercnv:  "scripts/run_infercnv.R"
-  mosaic_experimental: scripts/Mosaic_Experimental.py
-  mosaic_functional: scripts/Analyse_CNV_Manuelle.py
+  mosaic_functional: "scripts/Analyse_CNV_Manuelle.py"
+  mosaic_experimental: "scripts/Mosaic_Experimental.py"
   karyotapr: "scripts/run_karyotapR.R"
   compare:   "scripts/compare_results.py"
 
-# arguments propres à chaque outil
 params:
-
   infercnv:
-    run1_file:   "data/RUN1_S1_hFF_WT.dna.h5"
-    run2_file:   "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
-    chrom:       "10"
-    max_cells:   5000
-    min_reads:   100
-    max_reads:   50000
+    run1_file: "data/RUN1_S1_hFF_WT.dna.h5"
+    run2_file: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
+    chrom: "10"
+    max_cells: 5000
+    min_reads: 100
+    max_reads: 50000
     target_norm: 5000
-    target_tum:  5000
-    seed:        42
-    threads:     8
-    workdir:     "."
-    out_dir:     "results/infercnv"
+    target_tum: 5000
+    seed: 42
+    threads: 8
+    workdir: "."
+    out_dir: "results/infercnv"
 
-  mosaic:
-    mosaic_experimental:
-      wt: "data/RUN1_S1_hFF_WT.dna.h5"
-      crispr: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
-      bed: "data/6969-amplicon.bed"
-      chromosome: "chr10"
-      threshold: 1.5
-      distance: 50000
-    mosaic_functional:
-      wt: "data/RUN1_S1_hFF_WT.dna.h5"
-      crispr: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
-      bed: "data/6969-amplicon.bed"
-      chromosome: "chr10"
-      threshold: 1.5
-      distance: 50000
+  mosaic_functional:
+    wt: "data/RUN1_S1_hFF_WT.dna.h5"
+    crispr: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
+    bed: "data/6969-amplicon.bed"
+    threshold: 1.5
+    distance: 50000
+    output: "results/mosaic_functional/final_compare.csv"
+
+  mosaic_experimental:
+    wt: "data/RUN1_S1_hFF_WT.dna.h5"
+    crispr: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
+    bed: "data/6969-amplicon.bed"
+    threshold: 1.5
+    distance: 50000
+    output: "results/mosaic_experimental/final_compare.csv"
 
   karyotapr:
     run1_file: "data/RUN1_S1_hFF_WT.dna.h5"
     run2_file: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
-    design:    "data/6969-design-summary.csv"
-    out_dir:   "results/karyotapr"
+    design: "data/6969-design-summary.csv"
+    out_dir: "results/karyotapr"
     min_reads: 100
 
-
-  compare:
-    # pas d'options pour l’instant
+  compare: {}
