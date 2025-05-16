@@ -13,7 +13,7 @@ rule all:
 # ────────────────────────────
 rule infercnv:
     input:
-        script = SCRIPTS["infercnv]
+        script = SCRIPTS["infercnv"]
     output:
         "results/infercnv/.done"
     params:
