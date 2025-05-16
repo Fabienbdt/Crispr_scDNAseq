@@ -32,7 +32,7 @@ rule infercnv:
 # ────────────────────────────
 rule python_h5:
     input:
-        script = config["scripts"]["python_h5."]
+        script = config["scripts"]["python_h5"]
     output:
         "results/python_h5/.done"
     params:
