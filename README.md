@@ -121,7 +121,7 @@ params:
 
 Depuis le dossier contenant le snakefile, exécute :
 ```bash
-snakemake --use-conda --use-singularity --cores 4
+snakemake --use-conda --cores 4
 ```
 ⚠️ --use-singularity fonctionne aussi avec Docker sur les systèmes disposant de Docker Desktop.
 
