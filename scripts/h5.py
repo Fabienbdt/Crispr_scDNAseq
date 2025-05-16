@@ -15,7 +15,7 @@ parser.add_argument("--crispr", default="data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
 parser.add_argument("--bed", default="6969-amplicon.bed", help="Fichier BED des amplicons")
 parser.add_argument("--threshold", type=float, default=1.5, help="Seuil de gain CNV")
 parser.add_argument("--distance", type=int, default=50000, help="Distance max entre amplicons pour les regrouper")
-parser.add_argument("--output", default="Analyse_manuelle_par h5py", help="Fichier texte de sortie")
+parser.add_argument("--output", default="h5", help="Fichier texte de sortie")
 args = parser.parse_args()
 
 # === Chargement du fichier BED ===
