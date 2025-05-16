@@ -44,7 +44,7 @@ Crispr_scDNAseq/
 * Snakemake ≥ 7  
 * Accès SSH au dépôt GitHub
 
-### Cloner le dépôt
+## 1. Cloner le dépôt
 
 ```bash
 git clone https://github.com/Fabienbdt/Crispr_scDNAseq.git
@@ -52,7 +52,7 @@ cd Crispr_scDNAseq
 ```
 
 
-### Ajouter vos fichiers .h5 (non versionnés)
+### 2.Ajouter vos fichiers .h5 (non versionnés)
 Créez le dossier data/ et ajoutez vos fichiers .h5 :
 
 ```bash
@@ -65,26 +65,25 @@ Assurez-vous que les chemins spécifiés dans `config.yaml` pointent bien vers v
 
 
 
-Installation rapide de Snakemake (si besoin):
+### 3. Installation de Snakemake
 
 ```bash
 conda create -n snake_env snakemake -c bioconda -c conda-forge
 conda activate snake_env
 ```
 
-Puis installe l’environnement R :
+### 4. Environnements spécifiques
 
 ```bash
 
 conda env create -f envs/r.yml
-conda activate snake_env
+conda env create -f envs/mosaic_functional.yml
+conda env create -f envs/mosaic_experimental.yml
+
 ```
 
-### Pour l'utilisation de inferCNV sur différents système d'exploitation : 
-
+### 5. Docker pour infercnv (obligatoire)
 🐳 Construction du conteneur Docker pour infercnv
-
-Installez docker si message d'erreur du type : zsh: command not found: docker
 ```bash
 
 docker build -t crispr_infercnv .
@@ -94,7 +93,7 @@ L’image inclut R 4.3, infercnv, rhdf5 et toutes ses dépendances. Elle sera ut
 
 
 
-##  Étape 1 — Configurer config.yaml
+## Configurer config.yaml
 Modifie le fichier config.yaml pour lister tes scripts et leurs arguments :
 
 ```yaml
@@ -118,7 +117,7 @@ params:
 
 ```
 
-## Étape 2 Lancer le pipeline
+##  Lancer le pipeline
 
 Depuis le dossier contenant le snakefile, exécute :
 ```bash
@@ -126,15 +125,7 @@ snakemake --use-conda --use-singularity --cores 4
 ```
 ⚠️ --use-singularity fonctionne aussi avec Docker sur les systèmes disposant de Docker Desktop.
 
-## Étape 3 — Consulter les résultats
-Chaque script est exécuté dans results/<label>/ (ex. results/A/).
-
-Le résumé de comparaison est généré dans :
-results/comparison/summary.txt
-
 ### TEST D'UN SCRIPTS UNIQUE  : EX avec run_infercnv.R:
-
-
 
 ```bash
 
@@ -146,6 +137,23 @@ docker run --rm -v $(pwd):/work -w /work crispr_infercnv \
 
 
 ```
+
+## Étape 3 — Consulter les résultats
+Chaque outil écrit ses résultats dans results/<outil>/.
+
+S’il réussit, un fichier final_compare.csv est généré.
+
+La commande :
+```bash
+scripts/compare_results.py
+```
+
+génère automatiquement :
+
+```bash
+results/comparison/summary.txt
+```
+
 ## résultats et comparaison
 
 Chaque outil écrit ses résultats dans results/<outil>/
