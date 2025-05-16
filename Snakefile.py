@@ -32,13 +32,13 @@ rule infercnv:
 # ────────────────────────────
 rule mosaic_functional:
     input:
-        script = SCRIPTS["mosaic_functional"]
+        script = config["scripts"]["mosaic_functional"]
     output:
         "results/mosaic_functional/.done"
     params:
         args = build_args("mosaic_functional")
     conda:
-        "envs/python_h5.yml"
+        "envs/mosaic.yml"
     shell:
         """
         mkdir -p results/mosaic_functional
@@ -46,10 +46,11 @@ rule mosaic_functional:
         touch {output}
         """
 
+
 # ────────────────────────────
 # MOSAIC EXPERIMENTAL (via python_mosaic)
 # ────────────────────────────
-rule mosaic_experimental:
+rule manual_analysis:
     input:
         script = SCRIPTS["mosaic_experimental"]
     output:
