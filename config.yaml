@@ -28,7 +28,7 @@ params:
     bed: "data/6969-amplicon.bed"
     threshold: 1.5
     distance: 50000
-    output: "results/h5"
+    output: "results/h5/summary.txt"
 
   mosaic:
     wt: "data/RUN1_S1_hFF_WT.dna.h5"
