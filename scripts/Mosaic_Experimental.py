@@ -2,83 +2,82 @@
 # SCRIPT EXPÉRIMENTAL – ANALYSE CNV CHR10 AVEC MOSAIC SDK (SI VERSION COMPLÈTE)
 # =============================================
 
-# === 1. Import des bibliothèques nécessaires ===
-import missionbio.mosaic as ms              # SDK officiel Mosaic
-import pandas as pd                         # Manipulation des matrices
-import numpy as np                          # Outils mathématiques
-import seaborn as sns                       # Visualisation
-import matplotlib.pyplot as plt             # Affichage des graphiques
+import argparse
+import missionbio.mosaic as ms
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import os
 
-# === 2. Chargement des fichiers .h5 ===
-# On suppose ici qu’on a accès à la version complète du SDK Mosaic
-# On désactive tous les filtres automatiques (variants, cellules, etc.)
+# === Argument parsing ===
+parser = argparse.ArgumentParser(description="Analyse CNV chr10 via Mosaic SDK complet (expérimental)")
+parser.add_argument("--wt", required=True, help="Fichier .h5 WT")
+parser.add_argument("--crispr", required=True, help="Fichier .h5 CRISPR")
+parser.add_argument("--bed", required=True, help="Fichier .bed des amplicons")
+parser.add_argument("--threshold", type=float, default=1.5)
+parser.add_argument("--distance", type=int, default=50000)
+parser.add_argument("--output", required=True, help="Fichier résumé .txt")
+args = parser.parse_args()
 
-wt_path = "/net/cremi/redery/Projet/RUN1_S1_hFF_WT.dna.h5"
-crispr_path = "/net/cremi/redery/Projet/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
+# === Chargement des fichiers .h5 (avec SDK complet) ===
+sample_wt = ms.load(args.wt, raw=True, filter_variants=False, filter_cells=False, whitelist=[], single=True)
+sample_crispr = ms.load(args.crispr, raw=True, filter_variants=False, filter_cells=False, whitelist=[], single=True)
 
-sample_wt = ms.load(wt_path, raw=True, filter_variants=False, filter_cells=False, whitelist=[], single=True)
-sample_crispr = ms.load(crispr_path, raw=True, filter_variants=False, filter_cells=False, whitelist=[], single=True)
-
-# === 3. Extraction des données CNV ===
-# On récupère les barcodes et les amplicons sous forme de DataFrame
-# Ces objets sont normalement accessibles dans le SDK complet
-
-df_wt = sample_wt.dna.counts               # Matrice de lecture : cellules x amplicons
+# === Extraction des données CNV ===
+df_wt = sample_wt.dna.counts
 df_crispr = sample_crispr.dna.counts
 
-amplicons_wt = df_wt.columns
-amplicons_crispr = df_crispr.columns
+# === Filtrage chr10 via .bed ===
+bed = pd.read_csv(args.bed, sep="\t", header=None, names=["chr", "start", "end", "amplicon"])
+amplicons_chr10 = bed[bed["chr"] == "chr10"]["amplicon"].tolist()
+amplicons_common = [a for a in amplicons_chr10 if a in df_wt.columns and a in df_crispr.columns]
 
-# === 4. Filtrage du chromosome 10 ===
-# On isole les amplicons du chromosome 10 en utilisant leur nom
+df_wt_chr10 = df_wt[amplicons_common]
+df_crispr_chr10 = df_crispr[amplicons_common]
 
-chr10_amplicons = [a for a in amplicons_wt if a.startswith("chr10") and a in amplicons_crispr]
+# === Analyse CNV ===
+def compute_gain(df, threshold):
+    norm = df.div(df.mean(axis=0), axis=1)
+    mean = norm.mean(axis=1)
+    gain_cells = mean[mean > threshold]
+    return norm, gain_cells.index.tolist(), 100 * len(gain_cells) / len(df)
 
-df_wt_chr10 = df_wt[chr10_amplicons]
-df_crispr_chr10 = df_crispr[chr10_amplicons]
+norm_wt, ids_wt, pct_wt = compute_gain(df_wt_chr10, args.threshold)
+norm_crispr, ids_crispr, pct_crispr = compute_gain(df_crispr_chr10, args.threshold)
 
-# === 5. Normalisation des lectures par amplicon ===
-# Chaque valeur est divisée par la moyenne de son amplicon → permet de corriger les biais de couverture
+# === Moyenne CNV par amplicon (CRISPR) ===
+mean_amplicon = norm_crispr.loc[ids_crispr].mean(axis=0)
+amplicons_gain = mean_amplicon[mean_amplicon > args.threshold].index.tolist()
+bed_gain = bed[bed["amplicon"].isin(amplicons_gain)].sort_values(by="start").reset_index(drop=True)
 
-norm_wt = df_wt_chr10.div(df_wt_chr10.mean(axis=0), axis=1)
-norm_crispr = df_crispr_chr10.div(df_crispr_chr10.mean(axis=0), axis=1)
+# === Regroupement en régions continues ===
+regions = []
+if not bed_gain.empty:
+    start = bed_gain.loc[0, "start"]
+    end = bed_gain.loc[0, "end"]
+    count = 1
+    for i in range(1, len(bed_gain)):
+        s, e = bed_gain.loc[i, "start"], bed_gain.loc[i, "end"]
+        if s - end < args.distance:
+            end = max(end, e)
+            count += 1
+        else:
+            regions.append((int(start), int(end), count))
+            start, end, count = s, e, 1
+    regions.append((int(start), int(end), count))
 
-# === 6. Calcul de la moyenne CNV par cellule ===
-
-mean_cnv_wt = norm_wt.mean(axis=1)
-mean_cnv_crispr = norm_crispr.mean(axis=1)
-
-# === 7. Détection des cellules avec gain ===
-# On considère une cellule comme "à gain" si sa moyenne CNV dépasse 1.5
-
-threshold = 1.5
-gain_cells_wt = mean_cnv_wt[mean_cnv_wt > threshold]
-gain_cells_crispr = mean_cnv_crispr[mean_cnv_crispr > threshold]
-
-# === 8. Calcul du pourcentage de cellules avec gain ===
-
-pct_wt = 100 * len(gain_cells_wt) / len(norm_wt)
-pct_crispr = 100 * len(gain_cells_crispr) / len(norm_crispr)
-
-print("Résultats CNV chr10 (avec SDK Mosaic complet simulé)")
-print(f"WT     : {len(gain_cells_wt)} cellules à gain / {len(norm_wt)} total → {pct_wt:.2f}%")
-print(f"CRISPR : {len(gain_cells_crispr)} cellules à gain / {len(norm_crispr)} total → {pct_crispr:.2f}%")
-print(f"Différence absolue : {pct_crispr - pct_wt:.2f}%")
-
-# === 9. Identification des amplicons significativement affectés ===
-# On regarde les amplicons où la moyenne dépasse le seuil chez les cellules à gain
-
-gain_amplicons_crispr = norm_crispr.loc[gain_cells_crispr.index].mean(axis=0)
-gain_amplicons_crispr = gain_amplicons_crispr[gain_amplicons_crispr > threshold]
-
-print(f"{len(gain_amplicons_crispr)} amplicons gagnés détectés dans CRISPR")
-
-# === 10. Heatmap des cellules avec gain (optionnelle) ===
-
-plt.figure(figsize=(12, 6))
-sns.heatmap(norm_crispr.loc[gain_cells_crispr.index], cmap="coolwarm", center=1.0)
-plt.title("Heatmap CNV normalisé – cellules à gain (chr10 – CRISPR)")
-plt.xlabel("Amplicons chr10")
-plt.ylabel("Cellules CRISPR avec gain")
-plt.tight_layout()
-plt.show()
+# === Export résultats ===
+os.makedirs(os.path.dirname(args.output), exist_ok=True)
+with open(args.output, "w") as f:
+    f.write("Résultats Mosaic CNV (expérimental)\n")
+    f.write(f"Amplicons analysés : {len(amplicons_common)}\n")
+    f.write(f"WT     : {len(ids_wt)} / {len(df_wt_chr10)} → {pct_wt:.2f}%\n")
+    f.write(f"CRISPR : {len(ids_crispr)} / {len(df_crispr_chr10)} → {pct_crispr:.2f}%\n")
+    f.write(f"Différence : {pct_crispr - pct_wt:.2f}%\n\n")
+    f.write("Régions détectées :\n")
+    for s, e, n in regions:
+        f.write(f"chr10:{s}-{e} ({n} amplicons)\n")
+    if not bed_gain.empty:
+        f.write(f"\nPremière position : chr10:{int(bed_gain['start'].min())}\n")
+        f.write(f"Dernière position : chr10:{int(bed_gain['end'].max())}\n")
