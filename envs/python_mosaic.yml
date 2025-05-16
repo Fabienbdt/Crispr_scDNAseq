@@ -9,4 +9,4 @@ dependencies:
   - seaborn
   - matplotlib
   - pip:
-      - missionbio.mosaic
+      - git+https://github.com/MissionBio/mosaic-python-sdk.git
