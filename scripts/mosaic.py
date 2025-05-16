@@ -17,7 +17,7 @@ parser.add_argument("--crispr", default="data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
 parser.add_argument("--bed", default="data/6969-amplicon.bed", help="Fichier .bed des amplicons")
 parser.add_argument("--threshold", type=float, default=1.5)
 parser.add_argument("--distance", type=int, default=50000)
-parser.add_argument("--output", default="mosaic", help="Fichier résumé .txt")
+parser.add_argument("--output", default="mosaic", help="Fichier de sortie ")
 args = parser.parse_args()
 
 # === Chargement des fichiers .h5 (avec SDK complet) ===
