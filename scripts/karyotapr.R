@@ -96,3 +96,6 @@ barplot(mat, beside = TRUE, col = c("steelblue", "tomato"),
         ylab = "Pourcentage de cellules avec gain (%)",
         main = "Comparaison gain chr10 centromérique / télomérique")
 dev.off()
+
+
+file.create(file.path(opt$out_dir, ".done"))
