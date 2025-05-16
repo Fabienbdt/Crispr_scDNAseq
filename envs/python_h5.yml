@@ -1,0 +1,8 @@
+name: py-h5
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - h5py
+  - pandas
+  - numpy
