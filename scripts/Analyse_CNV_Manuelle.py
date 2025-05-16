@@ -5,17 +5,24 @@
 import h5py
 import pandas as pd
 import numpy as np
+import argparse
+import os
 
-# === Chemins des fichiers ===
-run1_path = "/net/cremi/redery/Projet/RUN1_S1_hFF_WT.dna.h5"
-run2_path = "/net/cremi/redery/Projet/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
-bed_path = "/net/cremi/redery/Projet/6969-amplicon.bed"
+# === Argument parsing ===
+parser = argparse.ArgumentParser(description="Analyse CNV sur chr10 depuis fichiers .h5")
+parser.add_argument("--wt", required=True, help="Fichier .h5 de l'échantillon WT")
+parser.add_argument("--crispr", required=True, help="Fichier .h5 de l'échantillon CRISPR")
+parser.add_argument("--bed", required=True, help="Fichier BED des amplicons")
+parser.add_argument("--threshold", type=float, default=1.5, help="Seuil de gain CNV")
+parser.add_argument("--distance", type=int, default=50000, help="Distance max entre amplicons pour les regrouper")
+parser.add_argument("--output", required=True, help="Fichier texte de sortie")
+args = parser.parse_args()
 
-# === Chargement du fichier BED pour identifier les amplicons chr10 ===
-bed = pd.read_csv(bed_path, sep="\t", header=None, names=["chr", "start", "end", "amplicon"])
+# === Chargement du fichier BED ===
+bed = pd.read_csv(args.bed, sep="\t", header=None, names=["chr", "start", "end", "amplicon"])
 amplicons_chr10 = bed[bed["chr"] == "chr10"]["amplicon"].tolist()
 
-# === Fonction de chargement des données à partir du fichier .h5 ===
+# === Fonction pour lire un fichier .h5 ===
 def load_counts(h5_path):
     with h5py.File(h5_path, 'r') as f:
         counts = f['assays/dna_read_counts/layers/read_counts'][:]
@@ -24,53 +31,55 @@ def load_counts(h5_path):
     df = pd.DataFrame(counts, index=barcodes, columns=amplicons)
     return df[[a for a in amplicons_chr10 if a in df.columns]]
 
-# === Chargement des deux runs ===
-df_wt = load_counts(run1_path)
-df_crispr = load_counts(run2_path)
+# === Chargement des données ===
+df_wt = load_counts(args.wt)
+df_crispr = load_counts(args.crispr)
 
-print(f"Nombre d'amplicons analysés sur chr10 : {df_wt.shape[1]}")
-
-# === Fonction d'analyse : normalisation + détection de gain ===
-def compute_gain_stats(df_chr10, threshold=1.5):
-    norm = df_chr10.div(df_chr10.mean(axis=0), axis=1)
+# === Fonction d'analyse CNV ===
+def compute_gain_stats(df, threshold):
+    norm = df.div(df.mean(axis=0), axis=1)
     means = norm.mean(axis=1)
     gain_cells = means[means > threshold]
-    return norm, gain_cells.index.tolist(), 100 * len(gain_cells) / len(df_chr10)
+    return norm, gain_cells.index.tolist(), 100 * len(gain_cells) / len(df)
 
-# === Analyse CNV sur chr10 pour WT et CRISPR ===
-norm_wt, gain_wt_ids, percent_wt = compute_gain_stats(df_wt)
-norm_crispr, gain_crispr_ids, percent_crispr = compute_gain_stats(df_crispr)
+norm_wt, gain_ids_wt, pct_wt = compute_gain_stats(df_wt, args.threshold)
+norm_crispr, gain_ids_crispr, pct_crispr = compute_gain_stats(df_crispr, args.threshold)
 
-# === Identification des amplicons avec gain dans la condition CRISPR ===
-amplicon_gains = norm_crispr.loc[gain_crispr_ids].mean(axis=0)
-amplicons_gain = amplicon_gains[amplicon_gains > 1.5].index.tolist()
+# === Identification des amplicons gagnés (CRISPR) ===
+amplicon_mean = norm_crispr.loc[gain_ids_crispr].mean(axis=0)
+amplicons_gain = amplicon_mean[amplicon_mean > args.threshold].index.tolist()
 bed_gain = bed[bed["amplicon"].isin(amplicons_gain)].sort_values(by="start").reset_index(drop=True)
 
-# === Fusion des amplicons proches en régions continues (< 50kb) ===
+# === Regroupement des régions gagnées ===
 regions = []
-start = bed_gain.loc[0, "start"]
-end = bed_gain.loc[0, "end"]
-count = 1
+if not bed_gain.empty:
+    start = bed_gain.loc[0, "start"]
+    end = bed_gain.loc[0, "end"]
+    count = 1
 
-for i in range(1, len(bed_gain)):
-    s, e = bed_gain.loc[i, "start"], bed_gain.loc[i, "end"]
-    if s - end < 50000:
-        end = max(end, e)
-        count += 1
-    else:
-        regions.append((int(start), int(end), count))
-        start, end, count = s, e, 1
-regions.append((int(start), int(end), count))
+    for i in range(1, len(bed_gain)):
+        s, e = bed_gain.loc[i, "start"], bed_gain.loc[i, "end"]
+        if s - end < args.distance:
+            end = max(end, e)
+            count += 1
+        else:
+            regions.append((int(start), int(end), count))
+            start, end, count = s, e, 1
+    regions.append((int(start), int(end), count))
 
-# === Affichage des résultats ===
-print("\n--- Résultats CNV chr10 (lecture brute .h5) ---")
-print(f"WT     : {len(gain_wt_ids)} cellules à gain / {len(df_wt)} total → {percent_wt:.2f}%")
-print(f"CRISPR : {len(gain_crispr_ids)} cellules à gain / {len(df_crispr)} total → {percent_crispr:.2f}%")
-print(f"Différence absolue : {percent_crispr - percent_wt:.2f}%")
+# === Sauvegarde des résultats ===
+os.makedirs(os.path.dirname(args.output), exist_ok=True)
+with open(args.output, "w") as f:
+    f.write("Résultats CNV chr10 (pipeline fonctionnel)\n")
+    f.write(f"Nombre d'amplicons analysés : {df_crispr.shape[1]}\n")
+    f.write(f"WT     : {len(gain_ids_wt)} / {len(df_wt)} → {pct_wt:.2f}%\n")
+    f.write(f"CRISPR : {len(gain_ids_crispr)} / {len(df_crispr)} → {pct_crispr:.2f}%\n")
+    f.write(f"Différence : {pct_crispr - pct_wt:.2f}%\n\n")
 
-print("\n➤ Régions de gain détectées sur chr10 :")
-for s, e, n in regions:
-    print(f" - chr10:{s}-{e}  ({n} amplicons)")
+    f.write("Régions de gains détectées (CRISPR) :\n")
+    for s, e, n in regions:
+        f.write(f"chr10:{s}-{e} ({n} amplicons)\n")
 
-print(f"\n➤ Première position détectée : chr10:{int(bed_gain['start'].min())}")
-print(f"➤ Dernière position détectée  : chr10:{int(bed_gain['end'].max())}")
+    if not bed_gain.empty:
+        f.write(f"\nPremière position : chr10:{int(bed_gain['start'].min())}\n")
+        f.write(f"Dernière position : chr10:{int(bed_gain['end'].max())}\n")
