@@ -142,6 +142,8 @@ snakemake h5 --use-conda --core
 ```
 
 ```bash
+
+###### karyotapR #######
 Rscript scripts/karyotapR.R \
   --run1_file data/RUN1_S1_hFF_WT.dna.h5 \
   --run2_file data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5 \
