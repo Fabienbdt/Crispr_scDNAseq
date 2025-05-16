@@ -152,6 +152,11 @@ Rscript scripts/karyotapR.R \
   --min_reads 100
 ```
 
+```bash
+####### MOSAIC #######
+snakemake analyse_h5 --use-conda --cores 1
+```
+
 ## Étape 3 — Consulter les résultats
 Chaque outil écrit ses résultats dans results/<outil>/.
 
