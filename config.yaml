@@ -8,7 +8,8 @@ repo_url: "git@gitlab.emi.u-bordeaux.fr:crispr/snake.git"
 # chemins ou wrappers à lancer
 scripts:
   infercnv:  "scripts/run_infercnv.R"
-  mosaic:    "scripts/run_mosaic.py"       # wrapper future version
+  mosaic_experimental: scripts/Mosaic_Experimental.py
+  mosaic_functional: scripts/Analyse_CNV_Manuelle.py
   karyotapr: "scripts/run_karyotapR.R"
   compare:   "scripts/compare_results.py"
 
@@ -30,9 +31,20 @@ params:
     out_dir:     "results/infercnv"
 
   mosaic:
-    bam:        "sample.bam"          # -> adapte quand ton wrapper sera prêt
-    reference:  "hg38"
-    threads:    8
+    mosaic_experimental:
+      wt: "data/RUN1_S1_hFF_WT.dna.h5"
+      crispr: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
+      bed: "data/6969-amplicon.bed"
+      chromosome: "chr10"
+      threshold: 1.5
+      distance: 50000
+    mosaic_functional:
+      wt: "data/RUN1_S1_hFF_WT.dna.h5"
+      crispr: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
+      bed: "data/6969-amplicon.bed"
+      chromosome: "chr10"
+      threshold: 1.5
+      distance: 50000
 
   karyotapr:
     run1_file: "data/RUN1_S1_hFF_WT.dna.h5"
