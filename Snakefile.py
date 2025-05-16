@@ -7,34 +7,55 @@ def build_args(tool):
 rule all:
     input: "results/comparison/summary.txt"
 
+# ──────────── RULE INFERCNV : via DOCKER ─────────────
 rule infercnv:
     input:
         script = SCRIPTS["infercnv"]
     output:
-        "results/infercnv_out/final_compare.csv"
+        "results/infercnv/.done"
     params:
         args = build_args("infercnv")
     container:
-        "docker://crispr_infercnv:latest"
+        "crispr_infercnv:latest"
     shell:
         """
-        mkdir -p results/infercnv_out
-        Rscript {input.script} {params.args} || echo "infercnv failed" > {output}
+        mkdir -p results/infercnv
+        Rscript {input.script} {params.args}
+        touch {output}
         """
 
-rule run_tool:
+# ───────────── RULE MOSAIC : envs/python_mosaic.yml ─────────────
+rule mosaic:
     input:
-        script = lambda wc: SCRIPTS[wc.label]
+        script = SCRIPTS["mosaic"]
     output:
-        "results/{label}_out/final_compare.csv"
+        "results/mosaic/.done"
     params:
-        args = lambda wc: build_args(wc.label)
+        args = build_args("mosaic")
+    conda:
+        "envs/python_mosaic.yml"
+    shell:
+        """
+        mkdir -p results/mosaic
+        python {input.script} {params.args}
+        touch {output}
+        """
+
+# ───────────── RULE KARYOTAPR : envs/r.yml ─────────────
+rule karyotapr:
+    input:
+        script = SCRIPTS["karyotapr"]
+    output:
+        "results/karyotapr/.done"
+    params:
+        args = build_args("karyotapr")
     conda:
         "envs/r.yml"
     shell:
         """
-        mkdir -p results/{wildcards.label}_out
-        {{ 'Rscript' if input.script.endswith('.R') else 'python' }} {input.script} {params.args} || echo "{wildcards.label} failed" > {output}
+        mkdir -p results/karyotapr
+        Rscript {input.script} {params.args}
+        touch {output}
         """
 
 rule compare:
