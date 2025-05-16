@@ -22,7 +22,7 @@ option_list <- list(
   make_option("--run2_file", type = "character", default = "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"),
   make_option("--panel",     type = "character", default = "CO261"),
   make_option("--design",    type = "character", default = "data/6969-design-summary.csv"),
-  make_option("--out_dir",   type = "character", default = "results/karyotapr")，
+  make_option("--out_dir",   type = "character", default = "results/karyotapr"),
   make_option("--min_reads",  type = "integer",   default = 100)
 )
 
