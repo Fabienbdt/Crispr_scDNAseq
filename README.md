@@ -9,7 +9,9 @@ Il prend en charge :
 
 * karyotapR,
 
-* Deux versions de Mosaic (expérimentale et fonctionnelle),
+* Une version de mosaic théorique,
+
+* Une version manuelle de via l'utilisation du package python h5py seul
 
 * Une phase de comparaison automatique des résultats.
 ---
