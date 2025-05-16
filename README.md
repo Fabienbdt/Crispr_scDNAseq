@@ -30,10 +30,10 @@ Crispr_scDNAseq/
 ├── envs/
 │   └── r.yml
 ├── scripts/
-│   ├── run_infercnv.R
-│   ├── run_karyotapR.R
-│   ├── Analyse_CNV_Manuelle.py
-│   ├── Mosaic_Experimental.py
+│   ├── infercnv.R
+│   ├── karyotapR.R
+│   ├── h5.py
+│   ├── mosaic.py
 │   └── compare_results.py
 ├── results/
 └── Dockerfile  # utilisé pour exécuter infercnv
