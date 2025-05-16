@@ -32,16 +32,16 @@ rule infercnv:
 # ────────────────────────────
 rule python_h5:
     input:
-        script = config["scripts"]["python_h5"]
+        script = config["scripts"]["h5"]
     output:
-        "results/python_h5/.done"
+        "results/h5/.done"
     params:
-        args = build_args("python_h5")
+        args = build_args("h5")
     conda:
         "envs/h5.yml"
     shell:
         """
-        mkdir -p results/python_h5
+        mkdir -p results/h5
         python {input.script} {params.args}
         touch {output}
         """
@@ -52,16 +52,16 @@ rule python_h5:
 # ────────────────────────────
 rule manual_analysis:
     input:
-        script = SCRIPTS["mosaic_experimental"]
+        script = SCRIPTS["mosaic"]
     output:
-        "results/mosaic_experimental/.done"
+        "results/mosaic/.done"
     params:
-        args = build_args("mosaic_experimental")
+        args = build_args("mosaic")
     conda:
         "envs/mosaic.yml"
     shell:
         """
-        mkdir -p results/mosaic_experimental
+        mkdir -p results/mosaic
         python {input.script} {params.args}
         touch {output}
         """
