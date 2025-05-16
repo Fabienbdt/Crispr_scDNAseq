@@ -26,7 +26,7 @@ option_list <- list(
   make_option("--cutoff",         type="double",    default=0.1),
   make_option("--workdir",        type="character", default=getwd()),
   make_option("--HMM",            type="character", default="i6"),
-  make_option("--out_dir",        type="character", default="./results/infercnv_out")
+  make_option("--out_dir",        type="character", default="./results/infercnv")
 )
 
 opt <- parse_args(OptionParser(option_list = option_list))
