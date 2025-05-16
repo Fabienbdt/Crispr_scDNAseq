@@ -66,8 +66,7 @@ if not bed_gain.empty:
             regions.append((int(start), int(end), count))
             start, end, count = s, e, 1
     regions.append((int(start), int(end), count))
-
-# === Export résultats ===
+# === Export résultats texte ===
 os.makedirs(os.path.dirname(args.output), exist_ok=True)
 with open(args.output, "w") as f:
     f.write("Résultats Mosaic CNV (expérimental)\n")
@@ -81,3 +80,25 @@ with open(args.output, "w") as f:
     if not bed_gain.empty:
         f.write(f"\nPremière position : chr10:{int(bed_gain['start'].min())}\n")
         f.write(f"Dernière position : chr10:{int(bed_gain['end'].max())}\n")
+
+# === Export CSV pour intégration finale ===
+summary_df = pd.DataFrame({
+    "Metric": [
+        "Amplicons analysés",
+        "Cellules WT avec gain (%)",
+        "Cellules CRISPR avec gain (%)",
+        "Différence (%)",
+        "Nombre de régions détectées"
+    ],
+    "Value": [
+        len(amplicons_common),
+        round(pct_wt, 2),
+        round(pct_crispr, 2),
+        round(pct_crispr - pct_wt, 2),
+        len(regions)
+    ]
+})
+
+csv_output_path = os.path.join(os.path.dirname(args.output), "final_compare.csv")
+summary_df.to_csv(csv_output_path, index=False)
+print(f"✅ CSV enregistré : {csv_output_path}")
