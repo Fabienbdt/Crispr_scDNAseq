@@ -1,12 +1,11 @@
-name: py-mosaic
+name: mosaic_env
 channels:
+  - missionbio
   - conda-forge
 dependencies:
-  - python=3.10
-  - pip
+  - python=3.8
+  - missionbio.mosaic
   - pandas
   - numpy
   - seaborn
   - matplotlib
-  - pip:
-      - git+https://github.com/MissionBio/mosaic-python-sdk.git
