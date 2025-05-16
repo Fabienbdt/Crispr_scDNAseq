@@ -1,10 +1,17 @@
 ![Last Commit](https://img.shields.io/github/last-commit/Fabienbdt/Crispr_scDNAseq)
 
-#  Snake — Pipeline Snakemake pour exécuter et comparer des scripts R
+🔬 Crispr_scDNAseq — Pipeline Snakemake pour l’analyse CNV sur données scDNA-seq
+Ce dépôt propose un pipeline modulaire et reproductible basé sur Snakemake, combinant plusieurs outils R et Python pour l’analyse des variations du nombre de copies (CNV) à partir de données Mission Bio Tapestri.
 
-Ce projet fournit un pipeline reproductible basé sur **Snakemake**.  
-Il exécute automatiquement plusieurs scripts R présents dans `scripts/`, accepte des paramètres personnalisables via `config.yaml`, puis compare leurs résultats.
+Il prend en charge :
 
+* infercnv (via Docker),
+
+* karyotapR,
+
+* Deux versions de Mosaic (expérimentale et fonctionnelle),
+
+* Une phase de comparaison automatique des résultats.
 ---
 
 ##  Structure du projet
@@ -13,18 +20,22 @@ Il exécute automatiquement plusieurs scripts R présents dans `scripts/`, accep
 Crispr_scDNAseq/
 ├── Snakefile
 ├── config.yaml
-├── data
- └── fichier A.h5
- └── fichier B.h5
+├── data/
+│   ├── RUN1_S1_hFF_WT.dna.h5
+│   ├── RUN2_S8_hFF_clone_6_KOfluo.dna.h5
+│   ├── 6969-amplicon.bed
+│   └── 6969-design-summary.csv
 ├── envs/
 │   └── r.yml
 ├── scripts/
 │   ├── run_infercnv.R
-│   ├── karyotapR.R
-│   ├── mosaic.py
+│   ├── run_karyotapR.R
+│   ├── Analyse_CNV_Manuelle.py
+│   ├── Mosaic_Experimental.py
 │   └── compare_results.py
 ├── results/
-└── Dockerfile  # pour exécuter infercnv dans un conteneur
+└── Dockerfile  # utilisé pour exécuter infercnv
+
 ```
 ## Prérequis
 
