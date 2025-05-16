@@ -125,17 +125,29 @@ snakemake --use-conda --cores 4
 ```
 ⚠️ --use-singularity fonctionne aussi avec Docker sur les systèmes disposant de Docker Desktop.
 
-### TEST D'UN SCRIPTS UNIQUE  : EX avec run_infercnv.R:
+### TEST D'UN SCRIPTS UNIQUE  :
 
 ```bash
-
+##### INFERCNV ######
 docker run --rm -v $(pwd):/work -w /work crispr_infercnv \
   Rscript scripts/infercnv.R \
     --NormalCellFile data/RUN1_S1_hFF_WT.dna.h5 \
     --TumorCellFile  data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5 \
     --out_dir results/infercnv
+```
 
+```bash
+##### lecture H5 classique  ######
+snakemake h5 --use-conda --core
+```
 
+```bash
+Rscript scripts/karyotapR.R \
+  --run1_file data/RUN1_S1_hFF_WT.dna.h5 \
+  --run2_file data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5 \
+  --design data/6969-design-summary.csv \
+  --out_dir results/karyotapr \
+  --min_reads 100
 ```
 
 ## Étape 3 — Consulter les résultats
