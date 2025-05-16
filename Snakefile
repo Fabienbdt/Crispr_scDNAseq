@@ -38,7 +38,7 @@ rule python_h5:
     params:
         args = build_args("python_h5")
     conda:
-        "envs/mosaic.yml"
+        "envs/h5.yml"
     shell:
         """
         mkdir -p results/python_h5
@@ -58,7 +58,7 @@ rule manual_analysis:
     params:
         args = build_args("mosaic_experimental")
     conda:
-        "envs/python_mosaic.yml"
+        "envs/mosaic.yml"
     shell:
         """
         mkdir -p results/mosaic_experimental
