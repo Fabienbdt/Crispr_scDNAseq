@@ -3,10 +3,9 @@
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
   install.packages("BiocManager", repos = "https://cloud.r-project.org")
 }
-if (!requireNamespace("edgeR", quietly = TRUE)) {
-  BiocManager::install("edgeR")
+if (!requireNamespace("karyotapR", quietly = TRUE)) {
+  BiocManager::install("karyotapR", ask = FALSE)
 }
-install.packages('karyotapR', repos = "https://cloud.r-project.org")
 
 
 
