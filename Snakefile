@@ -93,8 +93,8 @@ rule compare:
         expand("results/{label}/.done", label=[
             "infercnv", 
             "karyotapr", 
-            "python_h5", 
-            "mosaic_experimental"
+            "h5", 
+            "mosaic"
         ])
     output:
         "results/comparison/summary.txt"
