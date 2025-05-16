@@ -18,7 +18,6 @@ params:
     target_norm: 5000
     target_tum: 5000
     seed: 42
-    threads: 8
     workdir: "."
     out_dir: "results/infercnv"
 
