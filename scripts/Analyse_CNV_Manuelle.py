@@ -67,7 +67,7 @@ if not bed_gain.empty:
             start, end, count = s, e, 1
     regions.append((int(start), int(end), count))
 
-# === Sauvegarde des résultats ===
+# === Sauvegarde des résultats texte ===
 os.makedirs(os.path.dirname(args.output), exist_ok=True)
 with open(args.output, "w") as f:
     f.write("Résultats CNV chr10 (pipeline fonctionnel)\n")
@@ -83,3 +83,25 @@ with open(args.output, "w") as f:
     if not bed_gain.empty:
         f.write(f"\nPremière position : chr10:{int(bed_gain['start'].min())}\n")
         f.write(f"Dernière position : chr10:{int(bed_gain['end'].max())}\n")
+
+# === Export CSV pour comparaison finale ===
+df_summary = pd.DataFrame({
+    "Metric": [
+        "Amplicons analysés",
+        "Cellules WT avec gain (%)",
+        "Cellules CRISPR avec gain (%)",
+        "Différence (%)",
+        "Nombre de régions détectées"
+    ],
+    "Value": [
+        df_crispr.shape[1],
+        round(pct_wt, 2),
+        round(pct_crispr, 2),
+        round(pct_crispr - pct_wt, 2),
+        len(regions)
+    ]
+})
+
+csv_output_path = os.path.join(os.path.dirname(args.output), "final_compare.csv")
+df_summary.to_csv(csv_output_path, index=False)
+print(f"✅ CSV enregistré : {csv_output_path}")
