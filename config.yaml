@@ -51,6 +51,7 @@ params:
     run2_file: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
     design:    "data/6969-design-summary.csv"
     out_dir:   "results/karyotapr"
+    min_reads: 100
 
 
   compare:
