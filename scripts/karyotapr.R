@@ -1,8 +1,12 @@
 #!/usr/bin/env Rscript
 
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager", repos = "https://cloud.r-project.org")
+}
 if (!requireNamespace("edgeR", quietly = TRUE)) {
   BiocManager::install("edgeR")
 }
+
 
 suppressPackageStartupMessages({
   library(optparse)
@@ -39,8 +43,8 @@ qc_filter <- function(te, min_reads = 100, max_mt = 5) {
   return(te[, keep_cells])
 }
 
-te_run1_norm <- calcNormCounts(qc_filter(te_run1，min_reads = opt$min_reads))
-te_run2_norm <- calcNormCounts(qc_filter(te_run2，min_reads = opt$min_reads))
+te_run1_norm <- calcNormCounts(qc_filter(te_run1, min_reads = opt$min_reads))
+te_run2_norm <- calcNormCounts(qc_filter(te_run2, min_reads = opt$min_reads))
 
 # --- Charger le design ---
 design_df <- read.csv(opt$design, stringsAsFactors = FALSE, check.names = FALSE)
