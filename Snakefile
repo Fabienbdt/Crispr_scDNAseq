@@ -99,6 +99,6 @@ rule compare:
     output:
         "results/comparison/summary.txt"
     conda:
-        "envs/python_h5.yml"
+        "envs/h5.yml"
     script:
         SCRIPTS["compare"]
