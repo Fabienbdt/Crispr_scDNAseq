@@ -99,20 +99,24 @@ Modifie le fichier config.yaml pour lister tes scripts et leurs arguments :
 
 ```yaml
 scripts:
-  infercnv:  "scripts/run_infercnv.R"
-  mosaic:    "scripts/run_mosaic.py"
+  infercnv: "scripts/run_infercnv.R"
   karyotapr: "scripts/run_karyotapR.R"
-
+  mosaic_functional: "scripts/Analyse_CNV_Manuelle.py"
+  mosaic_experimental: "scripts/Mosaic_Experimental.py"
+  compare: "scripts/compare_results.py"
 
 params:
-  infercnv: "--input dataA.csv"
-  mosaic: "--threshold 0.05"
-  karyotapr: "--mode full"
+  infercnv:
+    run1_file: "data/RUN1_S1_hFF_WT.dna.h5"
+    run2_file: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
+    chrom: "10"
+    out_dir: "results/infercnv"
+  karyotapr:
+    run1_file: "..."
+    design: "data/6969-design-summary.csv"
+  ...
+
 ```
-
-scripts: : clé = label (dossier de sortie), valeur = chemin vers le script R.
-
-params: (optionnel) : arguments à passer au script correspondant.
 
 ## Étape 2 Lancer le pipeline
 
@@ -142,16 +146,33 @@ docker run --rm -v $(pwd):/work -w /work crispr_infercnv \
 
 
 ```
-## Personnalisation
-Ajoute ou remplace des scripts R dans scripts/.
+## résultats et comparaison
 
-Ajuste compare_results.py pour des analyses/graphes spécifiques.
+Chaque outil écrit ses résultats dans results/<outil>/
 
-Adaptez le Dockerfile si vos scripts requièrent d’autres packages
+Un fichier standardisé final_compare.csv est généré pour chaque outil (si tout se passe bien)
+
+Un script Python (compare_results.py) centralise automatiquement tous les final_compare.csv disponibles et génère :
+```bash
+results/comparison/summary.txt
+```
+
+##  Personnalisation
+Ajoute tes propres scripts dans le dossier scripts/
+
+Adapte les paramètres dans config.yaml
+
+Le Dockerfile peut être étendu si des paquets R supplémentaires sont nécessaires
 
 
 ## Crédits & Contact
-Développé par Fabien Bidet ; Raphael Edery ; Ziyi Zhao ; Tom Bourrachot — Université de Bordeaux
-✉️ fabien.bidet@etu.u-bordeaux.fr
+👥 Crédits
+Développé par :
+📍 Fabien Bidet
+📍 Raphael Edery
+📍 Ziyi Zhao
+📍 Tom Bourrachot
+Université de Bordeaux
 
+✉️ Contact : fabien.bidet@etu.u-bordeaux.fr
 
