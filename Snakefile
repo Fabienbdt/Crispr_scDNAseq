@@ -30,18 +30,18 @@ rule infercnv:
 # ────────────────────────────
 # Analyse_CNV_Manuelle (via python_h5)
 # ────────────────────────────
-rule Analyse_CNV_Manuelle:
+rule python_h5:
     input:
-        script = config["scripts"]["Analyse_CNV_Manuelle."]
+        script = config["scripts"]["python_h5."]
     output:
-        "results/Analyse_CNV_Manuelle/.done"
+        "results/python_h5/.done"
     params:
-        args = build_args("Analyse_CNV_Manuellel")
+        args = build_args("python_h5")
     conda:
         "envs/mosaic.yml"
     shell:
         """
-        mkdir -p results/Analyse_CNV_Manuelle
+        mkdir -p results/python_h5
         python {input.script} {params.args}
         touch {output}
         """
