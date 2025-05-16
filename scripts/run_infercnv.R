@@ -23,7 +23,6 @@ option_list <- list(
   make_option("--target_norm",    type="integer",   default=10000),
   make_option("--target_tum",     type="integer",   default=5000),
   make_option("--seed",           type="integer",   default=42),
-  make_option("--threads",        type="integer",   default=4),
   make_option("--cutoff",         type="double",    default=0.1),
   make_option("--workdir",        type="character", default=getwd()),
   make_option("--HMM",            type="character", default="i6"),
@@ -129,7 +128,7 @@ inf_obj <- infercnv::run(
   HMM                = TRUE,
   out_dir            = opt$out_dir,
   HMM_type           = opt$HMM,
-  num_threads        = opt$threads,
+  num_threads        = 1,
   leiden_resolution  = 0.001
 )
 
