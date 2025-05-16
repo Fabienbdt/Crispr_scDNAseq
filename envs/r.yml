@@ -6,9 +6,8 @@ channels:
 dependencies:
   - r-base=4.3
   - r-optparse
-  - r-seurat
   - r-dplyr
   - r-ggplot2
-  - r-matrix
   - r-data.table
-  - r-locfit
+  - r-biocmanager
+  # - r-seurat  # <--- active si besoin pour UMAP ou Seurat::CreateSeuratObject
