@@ -130,7 +130,7 @@ snakemake --use-conda --cores 4
 ```bash
 
 docker run --rm -v $(pwd):/work -w /work crispr_infercnv \
-  Rscript scripts/run_infercnv.R \
+  Rscript scripts/infercnv.R \
     --NormalCellFile data/RUN1_S1_hFF_WT.dna.h5 \
     --TumorCellFile  data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5 \
     --out_dir results/infercnv
