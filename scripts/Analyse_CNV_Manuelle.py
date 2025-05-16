@@ -105,3 +105,8 @@ df_summary = pd.DataFrame({
 csv_output_path = os.path.join(os.path.dirname(args.output), "final_compare.csv")
 df_summary.to_csv(csv_output_path, index=False)
 print(f"✅ CSV enregistré : {csv_output_path}")
+
+
+done_path = os.path.join(os.path.dirname(args.output), ".done")
+with open(done_path, "w") as f:
+    f.write("done\n")
