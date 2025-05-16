@@ -5,9 +5,12 @@ def build_args(tool):
     return " ".join(f"--{k} {v}" for k, v in config["params"].get(tool, {}).items())
 
 rule all:
-    input: "results/comparison/summary.txt"
+    input:
+        "results/comparison/summary.txt"
 
-# ──────────── RULE INFERCNV : via DOCKER ─────────────
+# ────────────────────────────
+# INFERCNV (via Docker)
+# ────────────────────────────
 rule infercnv:
     input:
         script = SCRIPTS["infercnv"]
@@ -24,24 +27,47 @@ rule infercnv:
         touch {output}
         """
 
-# ───────────── RULE MOSAIC : envs/python_mosaic.yml ─────────────
-rule mosaic:
+# ────────────────────────────
+# MOSAIC FUNCTIONAL (via python_h5)
+# ────────────────────────────
+rule mosaic_functional:
     input:
-        script = SCRIPTS["mosaic"]
+        script = SCRIPTS["mosaic_functional"]
     output:
-        "results/mosaic/.done"
+        "results/mosaic_functional/.done"
     params:
-        args = build_args("mosaic")
+        args = build_args("mosaic_functional")
     conda:
-        "envs/python_mosaic.yml"
+        "envs/python_h5.yml"
     shell:
         """
-        mkdir -p results/mosaic
+        mkdir -p results/mosaic_functional
         python {input.script} {params.args}
         touch {output}
         """
 
-# ───────────── RULE KARYOTAPR : envs/r.yml ─────────────
+# ────────────────────────────
+# MOSAIC EXPERIMENTAL (via python_mosaic)
+# ────────────────────────────
+rule mosaic_experimental:
+    input:
+        script = SCRIPTS["mosaic_experimental"]
+    output:
+        "results/mosaic_experimental/.done"
+    params:
+        args = build_args("mosaic_experimental")
+    conda:
+        "envs/python_mosaic.yml"
+    shell:
+        """
+        mkdir -p results/mosaic_experimental
+        python {input.script} {params.args}
+        touch {output}
+        """
+
+# ────────────────────────────
+# KARYOTAPR (via R)
+# ────────────────────────────
 rule karyotapr:
     input:
         script = SCRIPTS["karyotapr"]
@@ -58,12 +84,20 @@ rule karyotapr:
         touch {output}
         """
 
+# ────────────────────────────
+# COMPARAISON (via R ou Python)
+# ────────────────────────────
 rule compare:
     input:
-        expand("results/{label}_out/final_compare.csv", label=["infercnv", "mosaic", "karyotapr"])
+        expand("results/{label}/.done", label=[
+            "infercnv", 
+            "karyotapr", 
+            "mosaic_functional", 
+            "mosaic_experimental"
+        ])
     output:
         "results/comparison/summary.txt"
     conda:
-        "envs/r.yml"
-    shell:
-        "python {SCRIPTS['compare']}"
+        "envs/python_h5.yml"
+    script:
+        SCRIPTS["compare"]
