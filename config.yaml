@@ -2,8 +2,8 @@ repo_url: "git@gitlab.emi.u-bordeaux.fr:crispr/snake.git"
 
 scripts:
   infercnv:  "scripts/infercnv.R"
-  python_h5: "scripts/python_h5.py"
-  mosaic_experimental: "scripts/mosaic_experimental.py"
+  python_h5: "scripts/h5.py"
+  mosaic_experimental: "scripts/mosaic.py"
   karyotapr: "scripts/karyotapR.R"
   compare:   "scripts/compare_results.py"
 
@@ -22,21 +22,21 @@ params:
     workdir: "."
     out_dir: "results/infercnv"
 
-  analyse_manuelle:
+  h5:
     wt: "data/RUN1_S1_hFF_WT.dna.h5"
     crispr: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
     bed: "data/6969-amplicon.bed"
     threshold: 1.5
     distance: 50000
-    output: "results/analyse_manuelle_CNV"
+    output: "results/h5"
 
-  mosaic_experimental:
+  mosaic:
     wt: "data/RUN1_S1_hFF_WT.dna.h5"
     crispr: "data/RUN2_S8_hFF_clone_6_KOfluo.dna.h5"
     bed: "data/6969-amplicon.bed"
     threshold: 1.5
     distance: 50000
-    output: "results/mosaic_experimental"
+    output: "results/mosaic"
 
   karyotapr:
     run1_file: "data/RUN1_S1_hFF_WT.dna.h5"
