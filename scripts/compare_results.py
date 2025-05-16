@@ -12,14 +12,14 @@ summaries = {}
 
 # Recherche uniquement les fichiers nommés final_compare.csv
 for csv_path in glob.glob(os.path.join(base_dir, "*", "final_compare.csv")):
-    tool_name = os.path.basename(os.path.dirname(csv_path))  # ex: infercnv_out
+    tool_name = os.path.basename(os.path.dirname(csv_path))  # ex: infercnv
     try:
         df = pd.read_csv(csv_path)
         summaries[tool_name] = df
     except Exception as e:
         print(f"⚠️ Erreur lors de la lecture de {csv_path}: {e}")
 
-# Écrire la synthèse dans un fichier texte
+# Écriture du fichier de synthèse
 with open(output_path, "w") as f:
     if summaries:
         for tool, df in summaries.items():
@@ -30,7 +30,7 @@ with open(output_path, "w") as f:
         f.write("Aucun fichier final_compare.csv trouvé dans les sous-dossiers de 'results/'.\n")
         print("⚠️ Aucun fichier final_compare.csv trouvé.")
 
-done_path = os.path.join(os.path.dirname(args.output), ".done")
+# Création du fichier .done
+done_path = os.path.join(os.path.dirname(output_path), ".done")
 with open(done_path, "w") as f:
     f.write("done\n")
-
