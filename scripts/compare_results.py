@@ -29,3 +29,8 @@ with open(output_path, "w") as f:
     else:
         f.write("Aucun fichier final_compare.csv trouvé dans les sous-dossiers de 'results/'.\n")
         print("⚠️ Aucun fichier final_compare.csv trouvé.")
+
+done_path = os.path.join(os.path.dirname(args.output), ".done")
+with open(done_path, "w") as f:
+    f.write("done\n")
+
