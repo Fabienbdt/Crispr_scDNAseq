@@ -1,5 +1,9 @@
 #!/usr/bin/env Rscript
 
+if (!requireNamespace("edgeR", quietly = TRUE)) {
+  BiocManager::install("edgeR")
+}
+
 suppressPackageStartupMessages({
   library(optparse)
   library(karyotapR)
