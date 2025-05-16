@@ -28,20 +28,20 @@ rule infercnv:
         """
 
 # ────────────────────────────
-# MOSAIC FUNCTIONAL (via python_h5)
+# Analyse_CNV_Manuelle (via python_h5)
 # ────────────────────────────
-rule mosaic_functional:
+rule Analyse_CNV_Manuelle:
     input:
-        script = config["scripts"]["mosaic_functional"]
+        script = config["scripts"]["Analyse_CNV_Manuelle."]
     output:
-        "results/mosaic_functional/.done"
+        "results/Analyse_CNV_Manuelle/.done"
     params:
-        args = build_args("mosaic_functional")
+        args = build_args("Analyse_CNV_Manuellel")
     conda:
         "envs/mosaic.yml"
     shell:
         """
-        mkdir -p results/mosaic_functional
+        mkdir -p results/Analyse_CNV_Manuelle
         python {input.script} {params.args}
         touch {output}
         """
