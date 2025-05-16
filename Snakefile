@@ -30,7 +30,7 @@ rule infercnv:
 # ────────────────────────────
 # Analyse_CNV_Manuelle (via python_h5)
 # ────────────────────────────
-rule python_h5:
+rule h5:
     input:
         script = config["scripts"]["h5"]
     output:
