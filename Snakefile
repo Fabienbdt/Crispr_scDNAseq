@@ -90,15 +90,14 @@ rule karyotapr:
 # ────────────────────────────
 rule compare:
     input:
-        expand("results/{label}/.done", label=[
-            "infercnv", 
-            "karyotapr", 
-            "h5", 
-            #Rajouter mosaic si ok 
-        ])
+        infercnv = "results/infercnv/.done",
+        karyotapr = "results/karyotapr/.done",
+        h5 = "results/h5/.done",
+        mosaic = temp("results/mosaic/.done")  # marqué comme temporaire (facultatif)
     output:
         "results/comparison/summary.txt"
     conda:
         "envs/h5.yml"
     script:
         SCRIPTS["compare"]
+
