@@ -62,9 +62,9 @@ rule mosaic:
     shell:
         """
         mkdir -p results/mosaic
-        python {input.script} {params.args}
-        touch {output}
+        (python {input.script} {params.args} || echo "[WARNING] Mosaic a échoué, mais on continue.") && touch {output}
         """
+
 
 # ────────────────────────────
 # KARYOTAPR (via R)
