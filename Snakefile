@@ -50,21 +50,21 @@ rule h5:
 # ────────────────────────────
 # MOSAIC EXPERIMENTAL (via python_mosaic)
 # ────────────────────────────
-# ─rule manual_analysis:
-  # ─  input:
- # ─       script = SCRIPTS["mosaic"]
-   # ─ output:
-     # ─   "results/mosaic/.done"
-    # ─params:
-     # ─   args = build_args("mosaic")
-   # ─ conda:
-# ─        "envs/mosaic.yml"
-   # ─ shell:
-      # ─  """
-      # ─  mkdir -p results/mosaic
-       # ─ python {input.script} {params.args}
-       # ─ touch {output}
-       # ─ """
+rule mosaic:
+    input:
+        script = SCRIPTS["mosaic"]
+    output:
+        "results/mosaic/.done"
+    params:
+        args = build_args("mosaic")
+    conda:
+        "envs/mosaic.yml"
+    shell:
+        """
+        mkdir -p results/mosaic
+        python {input.script} {params.args}
+        touch {output}
+        """
 
 # ────────────────────────────
 # KARYOTAPR (via R)
