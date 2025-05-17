@@ -156,7 +156,7 @@ Rscript scripts/karyotapR.R \
 
 ```bash
 ####### MOSAIC #######
-snakemake analyse_h5 --use-conda --cores 1
+snakemake mosaic --use-conda --cores 1
 ```
 
 ## Étape 3 — Consulter les résultats
