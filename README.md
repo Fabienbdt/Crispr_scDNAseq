@@ -54,12 +54,15 @@ cd Crispr_scDNAseq
 ```
 
 
-### 2.Ajouter vos fichiers .h5 (non versionnés)
-Créez le dossier data/ et ajoutez vos fichiers .h5 :
+### 2.Ajouter vos fichiers au dossier data(non versionnés)
+Créez le dossier data/ et ajoutez vos fichiers **.h5** ( WT + EXP ) ; le fichier **6969-design-summary.csv** que vous appelerez comme tel et enfin **6969-amplicon.bed**:
 
 ```bash
 mkdir -p data/
-cp /chemin/vers/tes/fichiers/*.h5 data/
+cp /chemin/vers/des/fichiers/*.h5 data/
+cp /chemin/vers/des/fichiers/*.csv data/
+cp /chemin/vers/des/fichiers/*.bed data/
+
 ```
 Le dossier `data/` est ignoré par Git grâce à `.gitignore`, pour éviter de versionner des fichiers volumineux.  
 Assurez-vous que les chemins spécifiés dans `config.yaml` pointent bien vers vos fichiers `.h5` dans ce dossier.
