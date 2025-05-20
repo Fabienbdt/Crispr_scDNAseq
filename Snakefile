@@ -93,7 +93,7 @@ rule compare:
         infercnv = "results/infercnv/.done",
         karyotapr = "results/karyotapr/.done",
         h5 = "results/h5/.done",
-        mosaic = temp("results/mosaic/.done")  # marqué comme temporaire (facultatif)
+        mosaic = "results/mosaic/.done"  
     output:
         "results/comparison/summary.txt"
     conda:
