@@ -4,7 +4,7 @@ scripts:
   infercnv:  "scripts/infercnv.R"
   h5: "scripts/h5.py"
   mosaic: "scripts/mosaic.py"
-  karyotapr: "scripts/karyotapR.R"
+  karyotapr: "scripts/karyotapr.R"
   compare:   "scripts/compare_results.py"
 
 params:
